@@ -23,7 +23,17 @@
   --cpa-series-other: #75746c;
 }
 
-html[data-cpa-page="usage"] .main-content > :not([data-cpa-page-root]) { display: none !important; }
+/* The host content must stay rendered: the panel stops running animations through
+   Animation.commitStyles(), which throws inside display:none and crashes React. */
+html[data-cpa-page="usage"] .main-content { position: relative; }
+html[data-cpa-page="usage"] .main-content > :not([data-cpa-page-root]) {
+  position: absolute !important;
+  inset: 0 !important;
+  overflow: hidden !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  clip-path: inset(50%) !important;
+}
 html[data-cpa-page] .sidebar .nav-item.active:not([data-cpa-owned]) { background: transparent; border-color: transparent; box-shadow: none; }
 
 .cpa-u {

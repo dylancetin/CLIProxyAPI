@@ -333,6 +333,19 @@ test("x ticks align to local hours and UTC days", () => {
   assert.deepEqual(plain(h.tickIndexes([], HOUR, 100, () => 0)), []);
 });
 
+test("hides the host page while keeping it rendered", () => {
+  // The panel stops running animations with commitStyles(), which throws inside display:none.
+  const css = readFileSync(new URL("usage.css", import.meta.url), "utf8").replace(/\/\*[\s\S]*?\*\//g, "");
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].filter(([, selector]) => selector.includes(".main-content >"));
+  assert.ok(rules.length > 0);
+  for (const [, selector, body] of rules) {
+    assert.doesNotMatch(body, /display\s*:\s*none/, selector.trim());
+    assert.match(body, /position\s*:\s*absolute/);
+    assert.match(body, /visibility\s*:\s*hidden/);
+    assert.match(body, /clip-path\s*:\s*inset\(50%\)/);
+  }
+});
+
 test("labels the UTC offset", () => {
   assert.equal(h.utcOffsetLabel(480), "UTC+08:00");
   assert.equal(h.utcOffsetLabel(-210), "UTC−03:30");
