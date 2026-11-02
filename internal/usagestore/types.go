@@ -30,9 +30,8 @@ const (
 	DimStream Dimension = "stream"
 )
 
-// dimensionColumns is the single registry mapping Dimension to the SQL
-// expression over usage_hourly that yields its rendered value.
-// Add a dimension here and in the schema; nothing else branches on Dimension.
+// dimensionColumns maps each Dimension to the usage_hourly SQL expression that
+// yields its value.
 var dimensionColumns = map[Dimension]string{
 	DimProvider:        "provider",
 	DimModel:           "model",

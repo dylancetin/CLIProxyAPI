@@ -47,13 +47,11 @@ func defaultWriterConfig() writerConfig {
 }
 
 // Store is a SQLite-backed usage event store.
-//
-// It holds two handles on the same file: a single-connection write handle
-// that serializes batches and sweeps, and a small read pool. In WAL mode
-// readers see the last committed snapshot, so queries never wait on a
-// batch commit.
 type Store struct {
-	now     func() time.Time
+	now func() time.Time
+	// writeDB has one connection that serializes batches and sweeps. In WAL
+	// mode readDB sees the last committed snapshot, so queries never wait on a
+	// batch commit.
 	writeDB *sql.DB
 	readDB  *sql.DB
 
@@ -177,8 +175,8 @@ func sqliteDSN(path string, params url.Values) string {
 	return (&url.URL{Scheme: "file", Path: p, RawQuery: params.Encode()}).String()
 }
 
-// Close flushes pending events, stops background work, and closes the database.
-// It is safe to call more than once.
+// Close flushes pending events, stops background work, and closes the
+// database; later calls return the first call's result.
 func (s *Store) Close() error {
 	s.closeOnce.Do(func() {
 		s.mu.Lock()
@@ -241,7 +239,8 @@ func (s *Store) SetRetention(raw, hourly time.Duration) {
 	s.hourlyRetention.Store(int64(hourly))
 }
 
-// Sweep applies retention. It also runs periodically while the Store is open.
+// Sweep deletes rows past the retention windows; the Store also runs it
+// hourly while open.
 func (s *Store) Sweep(ctx context.Context) error {
 	now := s.now()
 	if raw := time.Duration(s.rawRetention.Load()); raw > 0 {

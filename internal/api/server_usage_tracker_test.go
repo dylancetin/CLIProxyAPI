@@ -25,8 +25,8 @@ type usageStoreOpenCall struct {
 	opts usagestore.Options
 }
 
-// stubUsageStoreOpener records Open calls and opens a real store unless failWith is set.
-func stubUsageStoreOpener(t *testing.T, failWith error) *[]usageStoreOpenCall {
+// recordUsageStoreOpens records Open calls and opens a real store unless failWith is set.
+func recordUsageStoreOpens(t *testing.T, failWith error) *[]usageStoreOpenCall {
 	t.Helper()
 	var calls []usageStoreOpenCall
 	previous := openUsageStore
@@ -67,7 +67,7 @@ func hasLogEntry(hook *logtest.Hook, level log.Level, fragment string) bool {
 }
 
 func TestUsageTrackerDisabledOpensNothing(t *testing.T) {
-	calls := stubUsageStoreOpener(t, nil)
+	calls := recordUsageStoreOpens(t, nil)
 	server := newTestServer(t)
 
 	server.StartUsageTracker(context.Background())
@@ -87,7 +87,7 @@ func TestUsageTrackerDisabledOpensNothing(t *testing.T) {
 }
 
 func TestUsageTrackerHomeModeForcesOff(t *testing.T) {
-	calls := stubUsageStoreOpener(t, nil)
+	calls := recordUsageStoreOpens(t, nil)
 	server := newTestServer(t)
 	cfg := trackerConfig(server)
 	cfg.Home.Enabled = true
@@ -101,7 +101,7 @@ func TestUsageTrackerHomeModeForcesOff(t *testing.T) {
 
 func TestUsageTrackerOpenFailureContinues(t *testing.T) {
 	hook := captureLogs(t)
-	calls := stubUsageStoreOpener(t, errors.New("disk full"))
+	calls := recordUsageStoreOpens(t, errors.New("disk full"))
 	server := newTestServer(t)
 	cfg := trackerConfig(server)
 
@@ -133,7 +133,7 @@ func TestUsageTrackerOpenFailureContinues(t *testing.T) {
 
 func TestUsageTrackerEmptyAuthDirOpensNothing(t *testing.T) {
 	hook := captureLogs(t)
-	calls := stubUsageStoreOpener(t, nil)
+	calls := recordUsageStoreOpens(t, nil)
 	server := newTestServer(t)
 	cfg := trackerConfig(server)
 	authDir := cfg.AuthDir
@@ -164,7 +164,7 @@ func TestUsageTrackerEmptyAuthDirOpensNothing(t *testing.T) {
 
 func TestUsageTrackerReloadLifecycle(t *testing.T) {
 	hook := captureLogs(t)
-	calls := stubUsageStoreOpener(t, nil)
+	calls := recordUsageStoreOpens(t, nil)
 	server := newTestServer(t)
 	cfg := trackerConfig(server)
 
@@ -249,7 +249,7 @@ func formattedLogLine(t *testing.T, hook *logtest.Hook, fragment string) string 
 
 func TestUsageTrackerLogLinesShowPaths(t *testing.T) {
 	hook := captureLogs(t)
-	stubUsageStoreOpener(t, nil)
+	recordUsageStoreOpens(t, nil)
 	server := newTestServer(t)
 	cfg := trackerConfig(server)
 	path := filepath.Join(cfg.AuthDir, proxyconfig.DefaultUsageTrackerFileName)
@@ -274,7 +274,7 @@ func TestUsageTrackerLogLinesShowPaths(t *testing.T) {
 	}
 
 	failHook := captureLogs(t)
-	stubUsageStoreOpener(t, errors.New("disk full"))
+	recordUsageStoreOpens(t, errors.New("disk full"))
 	failing := newTestServer(t)
 	failCfg := trackerConfig(failing)
 	failing.UpdateClients(&failCfg)
@@ -324,8 +324,7 @@ type fakeMirrorStore struct {
 
 func (s fakeMirrorStore) AuthDir() string { return s.authDir }
 
-// TestUsageTrackerDefaultPathOutsideRemoteStore guards the remote store modes:
-// the Postgres store wipes <root>/auths on start and the git store owns <root>
+// The Postgres store wipes <root>/auths on start and the git store owns <root>
 // as its worktree, so the default database must stay outside <root>.
 func TestUsageTrackerDefaultPathOutsideRemoteStore(t *testing.T) {
 	previous := sdkAuth.GetTokenStore()

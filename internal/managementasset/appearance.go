@@ -20,11 +20,8 @@ var usageScript []byte
 //go:embed usage.css
 var usageStyle []byte
 
-// WithAppearance applies the local appearance and the Usage page to compatible
-// CPAMC releases. Unknown/custom panels are returned untouched. The early
-// scripts initialize the existing theme store and observe the panel's own
-// management requests before the application runs; the final stylesheets
-// override release styles without modifying the application's controls.
+// WithAppearance injects the local appearance and the Usage page into
+// compatible CPAMC releases and returns unknown or custom panels untouched.
 func WithAppearance(page []byte) []byte {
 	if !bytes.Contains(page, []byte("cli-proxy-theme")) || bytes.Contains(page, []byte(`id="cpa-appearance"`)) {
 		return page
@@ -36,8 +33,9 @@ func WithAppearance(page []byte) []byte {
 		return page
 	}
 	headStart += len("<head>")
-	// Leave charset metadata at the beginning of the document, while still
-	// initializing the theme before any application script can execute.
+	// Leave charset metadata at the beginning of the document. The scripts still
+	// run before any application script, so they initialize the theme store and
+	// see the panel's own management requests from the start.
 	if script := bytes.Index(lower[headStart:headEnd], []byte("<script")); script >= 0 {
 		headStart += script
 	} else {
@@ -52,6 +50,7 @@ func WithAppearance(page []byte) []byte {
 	result.Write(usageScript)
 	result.WriteString("</script>")
 	result.Write(page[headStart:headEnd])
+	// The stylesheets go last in <head> so they override release styles.
 	result.WriteString(`<style id="cpa-appearance-style">`)
 	result.Write(appearanceStyle)
 	result.WriteString(`</style><style id="cpa-usage-style">`)

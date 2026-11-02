@@ -270,13 +270,11 @@ func (s *Server) SetWebsocketAuthChangeHandler(fn func(bool, bool)) {
 	s.wsAuthChanged = fn
 }
 
-// usageTrackerPluginName is the usage manager registration name of the tracker.
 const usageTrackerPluginName = "sqlite-usage"
 
 // openUsageStore is replaced in tests.
 var openUsageStore = usagestore.Open
 
-// usageTrackerRuntime is the SQLite usage store a Server owns.
 type usageTrackerRuntime struct {
 	mu         sync.Mutex
 	plugin     *switchableUsagePlugin
@@ -362,7 +360,7 @@ func usageRetention(days int) time.Duration {
 	return time.Duration(days) * 24 * time.Hour
 }
 
-// StartUsageTracker opens the usage tracker for the current config. Reloads go
+// StartUsageTracker opens the usage tracker for the current config; reloads go
 // through UpdateClientsContext.
 func (s *Server) StartUsageTracker(ctx context.Context) {
 	if s == nil {
@@ -371,7 +369,7 @@ func (s *Server) StartUsageTracker(ctx context.Context) {
 	s.syncUsageTracker(ctx, s.getConfig())
 }
 
-// CloseUsageTracker detaches and closes the usage tracker for good. Call it after
+// CloseUsageTracker closes the usage tracker and keeps it closed; call it after
 // the usage manager stops so the dispatcher no longer feeds the store.
 func (s *Server) CloseUsageTracker() {
 	if s == nil {

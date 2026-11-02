@@ -9,9 +9,8 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 )
 
-// EventFromRecord parses a usage.Record at the boundary.
-// Record.Source is dropped and Record.APIKey is kept only as a hash and a
-// masked hint, because either can carry a raw secret.
+// EventFromRecord converts a usage.Record, dropping Source and keeping APIKey
+// only as a hash and a masked hint because either can carry a raw secret.
 func EventFromRecord(r usage.Record) Event {
 	breakdown := usage.EnsureTokenBreakdownForProvider(r.Detail, r.Provider, r.ExecutorType).TokenBreakdown
 	apiKey := strings.TrimSpace(r.APIKey)

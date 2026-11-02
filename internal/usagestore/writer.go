@@ -44,7 +44,8 @@ DO UPDATE SET
     ttft_ms_max = MAX(ttft_ms_max, excluded.ttft_ms_max),
     ttft_count = ttft_count + excluded.ttft_count`
 
-// Plugin returns the batched usage writer. Its HandleUsage only enqueues.
+// Plugin returns a usage.Plugin whose HandleUsage enqueues events for the
+// batch writer.
 func (s *Store) Plugin() usage.Plugin {
 	return writerPlugin{store: s}
 }
@@ -53,7 +54,7 @@ type writerPlugin struct {
 	store *Store
 }
 
-// HandleUsage never blocks: the usage manager calls plugins serially from one
+// HandleUsage never blocks. The usage manager calls plugins serially from one
 // goroutine, so a full queue drops the event instead of waiting on SQLite.
 func (p writerPlugin) HandleUsage(_ context.Context, record usage.Record) {
 	p.store.enqueue(EventFromRecord(record))

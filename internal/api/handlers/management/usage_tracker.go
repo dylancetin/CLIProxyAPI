@@ -42,10 +42,9 @@ var usageTrackerDimensions = []usagestore.Dimension{
 	usagestore.DimStream,
 }
 
-// usageTrackerNow is the clock for default query ranges.
 var usageTrackerNow = time.Now
 
-// usageSeriesStore is the query surface of *usagestore.Store.
+// usageSeriesStore is the subset of *usagestore.Store the usage endpoints query.
 type usageSeriesStore interface {
 	QuerySeries(ctx context.Context, q usagestore.Query, prices usagestore.Prices) (usagestore.SeriesResult, error)
 	QueryBreakdown(ctx context.Context, from, to time.Time, dim usagestore.Dimension, filters map[usagestore.Dimension][]string, prices usagestore.Prices) ([]usagestore.BreakdownRow, error)
@@ -160,7 +159,7 @@ func (h *Handler) GetUsageSummary(c *gin.Context) {
 		// the range and their uncapped sum is the total.
 		if dim == usagestore.DimProvider {
 			for _, row := range rows {
-				total = addUsagePoint(total, row.Point)
+				total.Add(row.Point)
 			}
 		}
 		if len(rows) > usageTrackerBreakdownLimit {
@@ -444,25 +443,6 @@ func usagePointToJSON(p usagestore.Point) usagePointJSON {
 		TTFTCount:    p.TTFTCount,
 		CostUSD:      p.CostUSD,
 	}
-}
-
-func addUsagePoint(a, b usagestore.Point) usagestore.Point {
-	a.Requests += b.Requests
-	a.Failures += b.Failures
-	a.Tokens.InputUncached += b.Tokens.InputUncached
-	a.Tokens.InputCacheRead += b.Tokens.InputCacheRead
-	a.Tokens.InputCacheWrite += b.Tokens.InputCacheWrite
-	a.Tokens.OutputReasoning += b.Tokens.OutputReasoning
-	a.Tokens.OutputOther += b.Tokens.OutputOther
-	a.Tokens.Unclassified += b.Tokens.Unclassified
-	a.Tokens.Total += b.Tokens.Total
-	a.LatencyMsSum += b.LatencyMsSum
-	a.LatencyMsMax = max(a.LatencyMsMax, b.LatencyMsMax)
-	a.TTFTMsSum += b.TTFTMsSum
-	a.TTFTMsMax = max(a.TTFTMsMax, b.TTFTMsMax)
-	a.TTFTCount += b.TTFTCount
-	a.CostUSD += b.CostUSD
-	return a
 }
 
 const (

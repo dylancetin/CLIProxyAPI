@@ -1,4 +1,4 @@
-/* Categorical slots in a CVD-validated order; dark steps are selected for the dark surface. */
+/* Categorical slots in a CVD-validated order, with separate steps for the dark theme. */
 :root {
   --cpa-series-1: #2a78d6;
   --cpa-series-2: #eb6834;
@@ -23,7 +23,7 @@
   --cpa-series-other: #75746c;
 }
 
-/* The host content must stay rendered: the panel stops running animations through
+/* The host content must stay rendered. The panel stops running animations through
    Animation.commitStyles(), which throws inside display:none and crashes React. */
 html[data-cpa-page="usage"] .main-content { position: relative; }
 html[data-cpa-page="usage"] .main-content > :not([data-cpa-page-root]) {

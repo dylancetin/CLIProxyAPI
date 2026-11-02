@@ -162,7 +162,7 @@ func usageTestPoint(requests, tokens, latencyMax int64, cost float64) usagestore
 	}
 }
 
-func TestUsageSeriesReturnsContractShape(t *testing.T) {
+func TestUsageSeriesParsesQueryAndShapesResponse(t *testing.T) {
 	from := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
 	fullPoint := usagestore.Point{
 		BucketStart: from,

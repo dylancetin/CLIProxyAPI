@@ -57,9 +57,8 @@ func bucketStep(b Bucket) (time.Duration, error) {
 	}
 }
 
-// QuerySeries returns bucketed series for q, with CostUSD computed from prices.
-// An empty Bucket means BucketHour. From is floored and To is ceiled to the
-// bucket, so every bucket overlapping [From, To) gets a point.
+// QuerySeries returns q's series with one point per bucket overlapping
+// [From, To), using BucketHour when q.Bucket is empty and pricing CostUSD from prices.
 func (s *Store) QuerySeries(ctx context.Context, q Query, prices Prices) (SeriesResult, error) {
 	step, err := bucketStep(q.Bucket)
 	if err != nil {
@@ -106,7 +105,7 @@ func (s *Store) QuerySeries(ctx context.Context, q Query, prices Prices) (Series
 			byID[id] = series
 		}
 		r.point.CostUSD = prices.Cost(r.model, r.point.Tokens)
-		addPoint(&series.Points[(r.bucket-sp.start)/sp.step], r.point)
+		series.Points[(r.bucket-sp.start)/sp.step].Add(r.point)
 	})
 	if err != nil {
 		return SeriesResult{}, err
@@ -119,7 +118,7 @@ func (s *Store) QuerySeries(ctx context.Context, q Query, prices Prices) (Series
 	entries := make([]entry, 0, len(byID))
 	for id, series := range byID {
 		for _, p := range series.Points {
-			addPoint(&series.Total, p)
+			series.Total.Add(p)
 		}
 		entries = append(entries, entry{id: id, series: series})
 	}
@@ -148,14 +147,14 @@ func (s *Store) QuerySeries(ctx context.Context, q Query, prices Prices) (Series
 		}
 		for _, e := range entries[limit:] {
 			for i, p := range e.series.Points {
-				addPoint(&other.Points[i], p)
+				other.Points[i].Add(p)
 			}
-			addPoint(&other.Total, e.series.Total)
+			other.Total.Add(e.series.Total)
 		}
 		result.Series = append(result.Series, other)
 	}
 	for _, series := range result.Series {
-		addPoint(&result.Total, series.Total)
+		result.Total.Add(series.Total)
 	}
 	return result, nil
 }
@@ -175,7 +174,7 @@ func (s *Store) QueryBreakdown(ctx context.Context, from, to time.Time, dim Dime
 			byValue[r.values[0]] = row
 		}
 		r.point.CostUSD = prices.Cost(r.model, r.point.Tokens)
-		addPoint(&row.Point, r.point)
+		row.Point.Add(r.point)
 	})
 	if err != nil {
 		return nil, err
@@ -193,8 +192,8 @@ func (s *Store) QueryBreakdown(ctx context.Context, from, to time.Time, dim Dime
 	return rows, nil
 }
 
-// QueryDimensionValues returns distinct values per dimension within [from, to)
-// for filter pickers, each sorted ascending. DimAPIKey values are key hashes.
+// QueryDimensionValues returns each dimension's sorted distinct values within
+// [from, to), with key hashes for DimAPIKey.
 func (s *Store) QueryDimensionValues(ctx context.Context, from, to time.Time) (map[Dimension][]string, error) {
 	sp, err := alignSpan(from, to, time.Hour)
 	if err != nil {
@@ -337,8 +336,8 @@ func (s *Store) aggregate(ctx context.Context, q aggQuery, fn func(aggRow)) (err
 	return nil
 }
 
-// filterClause renders filters as parameterized IN lists: OR within a
-// dimension, AND across dimensions. Only registry expressions reach the SQL.
+// filterClause renders filters as parameterized IN lists, OR within a
+// dimension and AND across dimensions. Only dimensionColumns expressions reach the SQL.
 func filterClause(filters map[Dimension][]string) (string, []any, error) {
 	dims := make([]Dimension, 0, len(filters))
 	for dim, values := range filters {
@@ -375,23 +374,23 @@ func comparePoints(a, b Point) int {
 	return cmp.Compare(b.Requests, a.Requests)
 }
 
-// addPoint accumulates src into dst: sums add and max fields take the maximum.
-func addPoint(dst *Point, src Point) {
-	dst.Requests += src.Requests
-	dst.Failures += src.Failures
-	dst.Tokens.InputUncached += src.Tokens.InputUncached
-	dst.Tokens.InputCacheRead += src.Tokens.InputCacheRead
-	dst.Tokens.InputCacheWrite += src.Tokens.InputCacheWrite
-	dst.Tokens.OutputReasoning += src.Tokens.OutputReasoning
-	dst.Tokens.OutputOther += src.Tokens.OutputOther
-	dst.Tokens.Unclassified += src.Tokens.Unclassified
-	dst.Tokens.Total += src.Tokens.Total
-	dst.LatencyMsSum += src.LatencyMsSum
-	dst.LatencyMsMax = max(dst.LatencyMsMax, src.LatencyMsMax)
-	dst.TTFTMsSum += src.TTFTMsSum
-	dst.TTFTMsMax = max(dst.TTFTMsMax, src.TTFTMsMax)
-	dst.TTFTCount += src.TTFTCount
-	dst.CostUSD += src.CostUSD
+// Add sums src into p and keeps the larger value of each max field.
+func (p *Point) Add(src Point) {
+	p.Requests += src.Requests
+	p.Failures += src.Failures
+	p.Tokens.InputUncached += src.Tokens.InputUncached
+	p.Tokens.InputCacheRead += src.Tokens.InputCacheRead
+	p.Tokens.InputCacheWrite += src.Tokens.InputCacheWrite
+	p.Tokens.OutputReasoning += src.Tokens.OutputReasoning
+	p.Tokens.OutputOther += src.Tokens.OutputOther
+	p.Tokens.Unclassified += src.Tokens.Unclassified
+	p.Tokens.Total += src.Tokens.Total
+	p.LatencyMsSum += src.LatencyMsSum
+	p.LatencyMsMax = max(p.LatencyMsMax, src.LatencyMsMax)
+	p.TTFTMsSum += src.TTFTMsSum
+	p.TTFTMsMax = max(p.TTFTMsMax, src.TTFTMsMax)
+	p.TTFTCount += src.TTFTCount
+	p.CostUSD += src.CostUSD
 }
 
 func closeRows(rows *sql.Rows) {

@@ -108,8 +108,7 @@ func migrate(ctx context.Context, db *sql.DB) (err error) {
 	case err != nil:
 		return fmt.Errorf("usagestore: read schema version: %w", err)
 	case version != strconv.Itoa(schemaVersion):
-		err = fmt.Errorf("usagestore: unsupported schema version %q, want %d", version, schemaVersion)
-		return err
+		return fmt.Errorf("usagestore: unsupported schema version %q, want %d", version, schemaVersion)
 	}
 	if err = tx.Commit(); err != nil {
 		return fmt.Errorf("usagestore: commit migration: %w", err)

@@ -8,7 +8,7 @@
   const TYPES = ["stacked", "grouped", "lines", "area"];
   const TOPS = [5, 10, 20];
   // More than eight hues stop being distinguishable, so later slots reuse the
-  // hues with a 45° and then a 135° hatch: 24 slots cover the largest top N.
+  // hues with a 45° and then a 135° hatch. The 24 slots cover the largest top N.
   const HUES = 8;
   const SLOTS = HUES * 3;
   const MEMORY = 64;
@@ -437,7 +437,6 @@
       };
     }
   } catch { /* Without the hook the stored session is still tried. */ }
-
 
   const root = document.documentElement;
   const STRINGS = {

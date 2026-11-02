@@ -28,13 +28,12 @@ type ModelPrice struct {
 	Output     float64 `yaml:"output" json:"output"`
 }
 
-// Prices maps a model id to its price. Lookup tries the exact model id first,
-// then DefaultKey.
+// Prices maps a model id to its price, with DefaultKey as the fallback entry.
 type Prices map[string]ModelPrice
 
-// Cost returns the estimated USD cost of t for model, or 0 when no price applies.
-// Reasoning output is priced at the Output rate. Unclassified tokens are not
-// priced because their input/output split is unknown.
+// Cost returns the estimated USD cost of t for model, or 0 without a price; it
+// prices reasoning at the Output rate and skips unclassified tokens, whose
+// input/output split is unknown.
 func (p Prices) Cost(model string, t Tokens) float64 {
 	price, ok := p[model]
 	if !ok {

@@ -187,8 +187,7 @@ func (h *Handler) setUsageSeriesStore(store usageSeriesStore) {
 	h.mu.Unlock()
 }
 
-// UsageStore returns the current usage tracker store, or nil when the tracker is
-// disabled. Callers must not hold h.mu.
+// UsageStore returns the current usage tracker store, or nil when the tracker is disabled.
 func (h *Handler) UsageStore() *usagestore.Store {
 	store, _ := h.usageTrackerState()
 	sqliteStore, _ := store.(*usagestore.Store)
@@ -201,8 +200,6 @@ func (h *Handler) setUsagePrices(prices pricesStore) {
 	h.mu.Unlock()
 }
 
-// usageTrackerState returns the store and price source the usage endpoints use.
-// Callers must not hold h.mu.
 func (h *Handler) usageTrackerState() (usageSeriesStore, pricesStore) {
 	if h == nil {
 		return nil, nil

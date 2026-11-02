@@ -7,8 +7,7 @@ const (
 	DefaultUsageTrackerRawRetentionDays = 30
 	// DefaultUsageTrackerHourlyRetentionDays bounds hourly rollups by default.
 	DefaultUsageTrackerHourlyRetentionDays = 400
-	// DefaultUsageTrackerFileName is the database file created when SQLitePath is
-	// empty: in the auth directory, or in usage/ beside a remote store's mirror.
+	// DefaultUsageTrackerFileName is the database file name used when SQLitePath is empty.
 	DefaultUsageTrackerFileName = "usage.sqlite"
 )
 
@@ -23,7 +22,7 @@ type UsageTrackerConfig struct {
 	RawRetentionDays int `yaml:"raw-retention-days" json:"raw-retention-days"`
 	// HourlyRetentionDays bounds hourly rollups; 0 keeps them forever.
 	HourlyRetentionDays int `yaml:"hourly-retention-days" json:"hourly-retention-days"`
-	// Prices maps a model id (or "default") to USD per 1,000,000 tokens.
+	// Prices maps a model id or "default" to USD per 1,000,000 tokens.
 	Prices map[string]pricing.ModelPrice `yaml:"prices" json:"prices"`
 }
 
