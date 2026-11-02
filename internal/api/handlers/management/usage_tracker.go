@@ -231,13 +231,22 @@ func (h *Handler) GetUsageDimensions(c *gin.Context) {
 func (h *Handler) requireUsageTracker(c *gin.Context) (usageSeriesStore, pricesStore, bool) {
 	store, prices := h.usageTrackerState()
 	if store == nil {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "usage tracker disabled"})
+		usageTrackerDisabled(c)
 		return nil, nil, false
 	}
 	return store, prices, true
 }
 
+func usageTrackerDisabled(c *gin.Context) {
+	c.JSON(http.StatusServiceUnavailable, gin.H{"error": "usage tracker disabled"})
+}
+
 func usageQueryFailed(c *gin.Context, query string, err error) {
+	// A reload that disables the tracker closes the store under an in-flight query.
+	if errors.Is(err, usagestore.ErrClosed) {
+		usageTrackerDisabled(c)
+		return
+	}
 	log.WithError(err).WithField("query", query).Error("management: usage tracker query failed")
 	c.JSON(http.StatusInternalServerError, gin.H{"error": "usage query failed"})
 }

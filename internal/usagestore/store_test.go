@@ -228,6 +228,26 @@ func TestCloseFlushesPendingEvents(t *testing.T) {
 	assertRollupsMatchEvents(t, db)
 }
 
+func TestQueriesAfterCloseReturnErrClosed(t *testing.T) {
+	s, err := usagestore.Open(context.Background(), usagestore.Options{Path: filepath.Join(t.TempDir(), "usage.db")})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := s.Close(); err != nil {
+		t.Fatal(err)
+	}
+	from, to := t0, t0.Add(time.Hour)
+	if _, err := s.QuerySeries(context.Background(), usagestore.Query{From: from, To: to}, nil); !errors.Is(err, usagestore.ErrClosed) {
+		t.Fatalf("QuerySeries() after Close = %v, want ErrClosed", err)
+	}
+	if _, err := s.QueryBreakdown(context.Background(), from, to, usagestore.DimProvider, nil, nil); !errors.Is(err, usagestore.ErrClosed) {
+		t.Fatalf("QueryBreakdown() after Close = %v, want ErrClosed", err)
+	}
+	if _, err := s.QueryDimensionValues(context.Background(), from, to); !errors.Is(err, usagestore.ErrClosed) {
+		t.Fatalf("QueryDimensionValues() after Close = %v, want ErrClosed", err)
+	}
+}
+
 func TestSweepAppliesRetention(t *testing.T) {
 	now := t0.Add(30 * 24 * time.Hour)
 	clock := newClock(now)

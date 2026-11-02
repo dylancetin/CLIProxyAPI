@@ -214,6 +214,15 @@ func (s *Store) QueryDimensionValues(ctx context.Context, from, to time.Time) (m
 }
 
 func (s *Store) queryStrings(ctx context.Context, query string, args ...any) (_ []string, err error) {
+	if s.isClosed() {
+		return nil, ErrClosed
+	}
+	defer func() {
+		// A concurrent Close fails the read with database/sql's unexported error.
+		if err != nil && s.isClosed() {
+			err = ErrClosed
+		}
+	}()
 	rows, err := s.readDB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
@@ -253,6 +262,15 @@ const aggregateColumns = `SUM(requests), SUM(failures), SUM(input_uncached), SUM
     MAX(ttft_ms_max), SUM(ttft_count)`
 
 func (s *Store) aggregate(ctx context.Context, q aggQuery, fn func(aggRow)) (err error) {
+	if s.isClosed() {
+		return ErrClosed
+	}
+	defer func() {
+		// A concurrent Close fails the read with database/sql's unexported error.
+		if err != nil && s.isClosed() {
+			err = ErrClosed
+		}
+	}()
 	var groupExprs, hintExprs []string
 	var hintDims []Dimension
 	if q.bucketed {

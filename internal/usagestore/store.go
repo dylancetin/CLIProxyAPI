@@ -26,7 +26,7 @@ const (
 	readConnections      = 4
 )
 
-// ErrClosed is returned by Flush once Close has started.
+// ErrClosed is returned by Flush and the query methods once Close has started.
 var ErrClosed = errors.New("usagestore: store is closed")
 
 // writerConfig holds batch writer tunables; tests shrink them.
@@ -189,6 +189,12 @@ func (s *Store) Close() error {
 		s.closeErr = errors.Join(s.writerErr, s.closeHandles())
 	})
 	return s.closeErr
+}
+
+func (s *Store) isClosed() bool {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.closed
 }
 
 func (s *Store) closeHandles() error {

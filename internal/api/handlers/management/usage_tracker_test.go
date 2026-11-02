@@ -8,6 +8,7 @@ import (
 	"maps"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"sync"
@@ -454,6 +455,39 @@ func TestUsageStoreErrorsReturnGeneric500(t *testing.T) {
 	for _, target := range []string{"/usage/series", "/usage/summary", "/usage/dimensions"} {
 		rec := serveUsageTracker(t, h, http.MethodGet, target, "")
 		if rec.Code != http.StatusInternalServerError || strings.TrimSpace(rec.Body.String()) != `{"error":"usage query failed"}` {
+			t.Fatalf("%s: status=%d body=%s", target, rec.Code, rec.Body.String())
+		}
+	}
+}
+
+func TestUsageStoreClosedReturns503(t *testing.T) {
+	store := &fakeUsageStore{
+		err:    fmt.Errorf("usagestore: query provider values: %w", usagestore.ErrClosed),
+		values: map[usagestore.Dimension][]string{usagestore.DimAPIKey: {"hash-1"}},
+	}
+	h, _ := newUsageTrackerHandler(store)
+	for _, target := range []string{"/usage/series", "/usage/summary", "/usage/dimensions"} {
+		rec := serveUsageTracker(t, h, http.MethodGet, target, "")
+		if rec.Code != http.StatusServiceUnavailable || strings.TrimSpace(rec.Body.String()) != `{"error":"usage tracker disabled"}` {
+			t.Fatalf("%s: status=%d body=%s", target, rec.Code, rec.Body.String())
+		}
+	}
+}
+
+// TestUsageQueryRacingTrackerDisableReturns503 holds a real store that is
+// closed after the handler picked it up, as a tracker disable does.
+func TestUsageQueryRacingTrackerDisableReturns503(t *testing.T) {
+	store, errOpen := usagestore.Open(context.Background(), usagestore.Options{Path: filepath.Join(t.TempDir(), "usage.sqlite")})
+	if errOpen != nil {
+		t.Fatal(errOpen)
+	}
+	h, _ := newUsageTrackerHandler(store)
+	if errClose := store.Close(); errClose != nil {
+		t.Fatal(errClose)
+	}
+	for _, target := range []string{"/usage/series", "/usage/summary", "/usage/dimensions"} {
+		rec := serveUsageTracker(t, h, http.MethodGet, target, "")
+		if rec.Code != http.StatusServiceUnavailable || strings.TrimSpace(rec.Body.String()) != `{"error":"usage tracker disabled"}` {
 			t.Fatalf("%s: status=%d body=%s", target, rec.Code, rec.Body.String())
 		}
 	}
