@@ -342,6 +342,8 @@ func forceHomeRuntimeConfig(cfg *config.Config) {
 	}
 	cfg.APIKeys = nil
 	cfg.UsageStatisticsEnabled = true
+	// Home nodes forward usage to Home and keep no local usage database.
+	cfg.UsageTracker.Enabled = false
 	cfg.DisableCooling = true
 	cfg.SaveCooldownStatus = false
 	cfg.WebsocketAuth = false
