@@ -17,11 +17,19 @@ func TestWithAppearance(t *testing.T) {
 			}
 			body := string(got)
 			bootstrap := strings.Index(body, `<script id="cpa-appearance">`)
+			usage := strings.Index(body, `<script id="cpa-usage">`)
 			application := strings.Index(body, `<script type="module">`)
 			style := strings.Index(body, `<style id="cpa-appearance-style">`)
+			usageStyleAt := strings.Index(body, `<style id="cpa-usage-style">`)
 			releaseStyle := strings.Index(body, `<style>.sidebar`)
 			if bootstrap < 0 || bootstrap >= application {
 				t.Fatal("theme bootstrap must run before the application")
+			}
+			if usage <= bootstrap || usage >= application {
+				t.Fatal("usage request hook must run after the theme bootstrap and before the application")
+			}
+			if usageStyleAt <= style {
+				t.Fatal("usage styles must follow the appearance styles")
 			}
 			if strings.Index(body, `<meta charset="utf-8">`) >= bootstrap {
 				t.Fatal("charset metadata must precede the appearance script")
@@ -31,6 +39,11 @@ func TestWithAppearance(t *testing.T) {
 			}
 			if !bytes.Equal(got, WithAppearance(got)) {
 				t.Fatal("appearance was applied more than once")
+			}
+			for _, id := range []string{`id="cpa-appearance"`, `id="cpa-usage"`, `id="cpa-appearance-style"`, `id="cpa-usage-style"`} {
+				if count := strings.Count(body, id); count != 1 {
+					t.Fatalf("%s injected %d times", id, count)
+				}
 			}
 			if !strings.Contains(body, `<div id="root"></div>`) || !strings.Contains(body, `const key = "cli-proxy-theme";`) {
 				t.Fatal("application markup was lost")
@@ -64,6 +77,24 @@ func TestWithAppearanceLeavesUnknownPanelsUntouched(t *testing.T) {
 	} {
 		if got := WithAppearance([]byte(page)); string(got) != page {
 			t.Errorf("modified unsupported panel %q", page)
+		}
+	}
+}
+
+// The assets are inlined into raw text elements, so they must not contain a
+// sequence that ends the element or enters the script's escaped states.
+func TestInlineAssetsCannotCloseTheirElement(t *testing.T) {
+	for name, asset := range map[string][]byte{
+		"appearance.js":  appearanceScript,
+		"usage.js":       usageScript,
+		"appearance.css": appearanceStyle,
+		"usage.css":      usageStyle,
+	} {
+		lower := bytes.ToLower(asset)
+		for _, marker := range []string{"</script", "</style", "<script", "<!--"} {
+			if bytes.Contains(lower, []byte(marker)) {
+				t.Errorf("%s contains %q", name, marker)
+			}
 		}
 	}
 }
