@@ -28,11 +28,11 @@ func (p configUsagePrices) Get() usagestore.Prices {
 }
 
 func (p configUsagePrices) Put(prices usagestore.Prices) error {
-	if p.h == nil || p.h.cfg == nil {
+	if p.h == nil {
 		return errNoConfigFile
 	}
 	p.h.mu.Lock()
-	if p.h.configFilePath == "" {
+	if p.h.cfg == nil || p.h.configFilePath == "" {
 		p.h.mu.Unlock()
 		return errNoConfigFile
 	}

@@ -121,3 +121,42 @@ func TestConfigUsagePricesPutRemovesModels(t *testing.T) {
 		}
 	}
 }
+
+// TestConfigUsagePricesPutConcurrentSetConfig fails under -race when Put reads
+// h.cfg outside h.mu.
+func TestConfigUsagePricesPutConcurrentSetConfig(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	if errWrite := os.WriteFile(path, []byte("config-version: 8\nserver: {port: 8317}\n"), 0o600); errWrite != nil {
+		t.Fatal(errWrite)
+	}
+	cfg, errLoad := config.LoadConfig(path)
+	if errLoad != nil {
+		t.Fatal(errLoad)
+	}
+	h := NewHandler(cfg, path, nil)
+	prices := configUsagePrices{h: h}
+	// Without a source hash SetConfig always replaces h.cfg.
+	reload := cfg.CloneForRuntime()
+	reload.SourceHash = ""
+
+	stop := make(chan struct{})
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case <-stop:
+				return
+			default:
+				h.SetConfig(reload)
+			}
+		}
+	}()
+	for i := 0; i < 50; i++ {
+		if errPut := prices.Put(usagestore.Prices{"m": {Input: float64(i)}}); errPut != nil {
+			t.Fatal(errPut)
+		}
+	}
+	close(stop)
+	<-done
+}
