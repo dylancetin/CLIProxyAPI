@@ -1,10 +1,12 @@
 package api
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/managementasset"
@@ -336,5 +338,14 @@ func (s *Server) serveManagementControlPanel(c *gin.Context) {
 		}
 	}
 
-	c.File(filePath)
+	page, errRead := os.ReadFile(filePath)
+	if errRead != nil {
+		log.WithError(errRead).Error("failed to read management control panel asset")
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+	// Appearance is applied only at serve time; keep the downloaded release
+	// untouched so its hash can still be checked by the asset updater.
+	c.Header("Content-Type", "text/html; charset=utf-8")
+	http.ServeContent(c.Writer, c.Request, managementasset.ManagementFileName, time.Time{}, bytes.NewReader(managementasset.WithAppearance(page)))
 }

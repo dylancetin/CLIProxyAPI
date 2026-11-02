@@ -1,0 +1,244 @@
+/* Reference palette: quiet charcoal surfaces; color belongs to quota health. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg-secondary: #131311;
+  --bg-primary: #1b1b18;
+  --bg-tertiary: #272724;
+  --bg-hover: #30302c;
+  --bg-quinary: #171714;
+  --floating-surface: #242420;
+  --text-primary: #f1f1ed;
+  --text-secondary: #bbbcb4;
+  --text-tertiary: #999a91;
+  --text-quaternary: #8e8f86;
+  --border-color: #2d2d28;
+  --border-primary: #3c3d36;
+  --border-hover: #4d4e45;
+  --primary-color: #a9aaa1;
+  --primary-hover: #cacbc2;
+  --primary-active: #eeeee8;
+  --primary-contrast: #151512;
+  --viz-success: #68b592;
+  --success-color: #68b592;
+  --quota-medium-color: #e8cf79;
+  --viz-failure: #ce6a61;
+  --glass-bg: var(--bg-primary);
+  --glass-bg-secondary: var(--bg-secondary);
+}
+
+:root {
+  --sidebar-panel-width: 240px;
+}
+
+.app-shell .top-gradient-blur {
+  display: none;
+}
+
+.sidebar .nav-item {
+  min-height: 36px;
+  font-size: 14px;
+  font-weight: 550;
+}
+
+.sidebar .nav-group-label {
+  color: var(--text-tertiary);
+}
+
+.sidebar .nav-item.active {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+  box-shadow: none;
+}
+
+.main-header .header-actions,
+.main-header .mobile-sidebar-actions {
+  background: var(--bg-primary);
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+[data-theme="dark"] .btn-primary {
+  color: var(--bg-secondary);
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+[data-cpa-view-control] {
+  flex: 0 0 auto;
+  min-width: 128px;
+  padding: 7px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+[data-cpa-view-control]:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 3px;
+}
+
+[data-cpa-summary] {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  border-radius: 13px;
+  background: var(--bg-primary);
+}
+
+.cpa-provider-summary {
+  min-width: 0;
+  padding: 20px;
+  border-right: 1px solid var(--border-color);
+}
+
+.cpa-provider-summary:last-child { border-right: 0; }
+.cpa-provider-heading { display: flex; align-items: center; gap: 9px; font-size: 14px; }
+.cpa-provider-heading img { width: 18px; height: 18px; object-fit: contain; }
+.cpa-provider-heading > span { margin-left: auto; color: var(--text-tertiary); font-size: 12px; }
+.cpa-summary-label { margin-top: 16px; color: var(--text-secondary); font-size: 12px; }
+.cpa-summary-amount { display: flex; align-items: baseline; gap: 7px; font-variant-numeric: tabular-nums; }
+.cpa-summary-amount strong { font-size: 29px; font-weight: 650; letter-spacing: -0.04em; }
+.cpa-summary-amount > span { color: var(--text-tertiary); font-size: 12px; }
+.cpa-summary-segments { display: flex; gap: 4px; margin-top: 12px; }
+.cpa-summary-segments > span { flex: 1; height: 5px; overflow: hidden; border-radius: 2px; background: var(--bg-hover); }
+.cpa-summary-segments i { display: block; height: 100%; border-radius: inherit; }
+.cpa-summary-segments [data-level="high"] { background: var(--viz-success); }
+.cpa-summary-segments [data-level="medium"] { background: var(--quota-medium-color); }
+.cpa-summary-segments [data-level="low"] { background: var(--viz-failure); }
+
+/* Component-name selectors deliberately omit the release-specific CSS hash.
+   The existing React nodes, buttons, quota states and event handlers stay intact. */
+[data-cpa-quota-view="ledger"] [class*="QuotaPage-module__grid__"]:has(article) {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+[data-cpa-quota-view="ledger"] article[class*="QuotaCard-module__card__"] {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 2.5fr) auto;
+  align-items: center;
+  gap: 18px 24px;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  transform: none;
+  animation: none;
+}
+
+[data-cpa-quota-view="ledger"] article[data-cpa-provider-start]::before {
+  content: attr(data-cpa-provider);
+  grid-column: 1 / -1;
+  padding: 10px 0 2px;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaCard-module__body__"] {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px 22px;
+  align-items: start;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaCard-module__body__"] > :not([class*="QuotaBody-module__quotaRow__"]) {
+  grid-column: 1 / -1;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaRow__"]:has(> [class*="QuotaBody-module__quotaRowHeader__"]) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 5px 8px;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaRowHeader__"],
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaMeta__"] {
+  display: contents;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaMeta__"] {
+  font-family: inherit;
+  font-size: 12px;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaModel__"] {
+  grid-row: 1;
+  grid-column: 1;
+  font-weight: 500;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaPercent__"] { grid-row: 1; grid-column: 2; }
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaBar__"] { grid-row: 2; grid-column: 1 / -1; }
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaRowHeader__"] [class*="QuotaBody-module__quotaReset__"] { grid-row: 3; grid-column: 1; font-size: 11px; }
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__quotaResetRelative__"] { grid-row: 3; grid-column: 2; font-size: 11px; white-space: nowrap; }
+[data-cpa-quota-view="ledger"] [class*="QuotaBody-module__codexPlan__"] { font-size: 11px; }
+
+[data-cpa-quota-view="ledger"] [class*="QuotaCard-module__idleBody__"] {
+  min-height: 44px;
+  flex-direction: row;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaCard-module__actionRow__"] {
+  max-width: 155px;
+}
+
+[data-cpa-quota-view="ledger"] [class*="QuotaCard-module__actionPill__"] {
+  border-color: transparent;
+  color: var(--text-secondary);
+}
+
+@media (min-width: 769px) {
+  .main-content:not(.main-content-plugin-resource):not(.main-content-logs) {
+    padding-top: 78px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1200px) {
+  [data-cpa-quota-view="ledger"] article[class*="QuotaCard-module__card__"] {
+    grid-template-columns: minmax(160px, 1fr) minmax(0, 2fr);
+  }
+  [data-cpa-quota-view="ledger"] [class*="QuotaCard-module__body__"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  [data-cpa-quota-view="ledger"] [class*="QuotaCard-module__actionRow__"] {
+    grid-column: 2;
+    justify-self: end;
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  :root { --sidebar-panel-width: min(280px, calc(100vw - 24px)); }
+  [class*="QuotaPage-module__tabsRow__"] { flex-wrap: wrap; }
+  [class*="QuotaPage-module__tabsRow__"] > :first-child { flex-basis: 100%; }
+  [data-cpa-view-control] { margin-left: auto; }
+  [data-cpa-summary] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cpa-provider-summary { padding: 14px; border-bottom: 1px solid var(--border-color); }
+  .cpa-provider-heading { flex-wrap: wrap; }
+  .cpa-provider-heading > span { width: 100%; margin-left: 0; }
+  .cpa-summary-amount strong { font-size: 25px; }
+  [data-cpa-quota-view="ledger"] article[class*="QuotaCard-module__card__"] {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 18px 0;
+  }
+  [data-cpa-quota-view="ledger"] [class*="QuotaCard-module__body__"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+  [data-cpa-quota-view="ledger"] [class*="QuotaCard-module__actionRow__"] { max-width: none; }
+}
+
+@media (max-width: 380px) {
+  [data-cpa-summary],
+  [data-cpa-quota-view="ledger"] [class*="QuotaCard-module__body__"] { grid-template-columns: minmax(0, 1fr); }
+}
