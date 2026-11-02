@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -283,6 +284,96 @@ func TestWriteClaudeErrorResponse_IncludesRetryAfterForModelCooldownDefaultSetti
 	}
 	if got := recorder.Header().Get("Retry-After"); got != "20" {
 		t.Fatalf("Retry-After = %q, want 20", got)
+	}
+}
+
+type coolingClaudeExecutor struct{}
+
+func (coolingClaudeExecutor) Identifier() string { return "claude" }
+
+func (coolingClaudeExecutor) Execute(context.Context, *coreauth.Auth, coreexecutor.Request, coreexecutor.Options) (coreexecutor.Response, error) {
+	return coreexecutor.Response{}, errors.New("upstream must not be called while the credential is cooling")
+}
+
+func (coolingClaudeExecutor) ExecuteStream(context.Context, *coreauth.Auth, coreexecutor.Request, coreexecutor.Options) (*coreexecutor.StreamResult, error) {
+	return nil, errors.New("upstream must not be called while the credential is cooling")
+}
+
+func (coolingClaudeExecutor) Refresh(_ context.Context, auth *coreauth.Auth) (*coreauth.Auth, error) {
+	return auth, nil
+}
+
+func (coolingClaudeExecutor) CountTokens(context.Context, *coreauth.Auth, coreexecutor.Request, coreexecutor.Options) (coreexecutor.Response, error) {
+	return coreexecutor.Response{}, errors.New("not implemented")
+}
+
+func (coolingClaudeExecutor) HttpRequest(context.Context, *coreauth.Auth, *http.Request) (*http.Response, error) {
+	return nil, errors.New("not implemented")
+}
+
+// Claude Code reads anthropic-ratelimit-unified-* headers on a 429 to report a
+// usage limit and its reset time, so a cooldown caused by an Anthropic unified
+// rejection must replay them instead of returning a bare Retry-After.
+func TestWriteClaudeErrorResponse_ReplaysUnifiedRateLimitHeadersForClaudeCooldown(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	const model = "claude-cooldown-replay-model"
+	const authID = "claude-cooldown-replay-auth"
+
+	next := time.Now().Add(3 * time.Hour).Truncate(time.Second).Add(500 * time.Millisecond)
+	wantReset := strconv.FormatInt(next.Truncate(time.Second).Unix()+1, 10)
+	manager := coreauth.NewManager(nil, nil, nil)
+	manager.RegisterExecutor(coolingClaudeExecutor{})
+	auth := &coreauth.Auth{
+		ID:       authID,
+		Provider: "claude",
+		Status:   coreauth.StatusActive,
+		Quota: coreauth.QuotaState{
+			Exceeded:      true,
+			Reason:        "credential_quota",
+			NextRecoverAt: next,
+			ObservedAt:    time.Now().Add(-time.Minute),
+			Signals: map[string]string{
+				"Anthropic-Ratelimit-Unified-Status":               "rejected",
+				"Anthropic-Ratelimit-Unified-5h-Status":            "rejected",
+				"Anthropic-Ratelimit-Unified-Representative-Claim": "five_hour",
+				"Anthropic-Ratelimit-Unified-Reset":                "1",
+			},
+		},
+	}
+	if _, errRegister := manager.Register(coreauth.WithSkipPersist(context.Background()), auth); errRegister != nil {
+		t.Fatalf("Register() error = %v", errRegister)
+	}
+	reg := registry.GetGlobalRegistry()
+	reg.RegisterClient(authID, "claude", []*registry.ModelInfo{{ID: model}})
+	t.Cleanup(func() { reg.UnregisterClient(authID) })
+	manager.RefreshSchedulerEntry(authID)
+
+	_, errExecute := manager.Execute(context.Background(), []string{"claude"}, coreexecutor.Request{Model: model}, coreexecutor.Options{})
+	if errExecute == nil {
+		t.Fatal("Execute() error = nil, want cooldown error")
+	}
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	handler := &ClaudeCodeAPIHandler{}
+	handler.WriteErrorResponse(c, &interfaces.ErrorMessage{StatusCode: http.StatusTooManyRequests, Error: errExecute})
+
+	if recorder.Code != http.StatusTooManyRequests {
+		t.Fatalf("status = %d, want %d", recorder.Code, http.StatusTooManyRequests)
+	}
+	wantHeaders := map[string]string{
+		"anthropic-ratelimit-unified-status":               "rejected",
+		"anthropic-ratelimit-unified-reset":                wantReset,
+		"anthropic-ratelimit-unified-representative-claim": "five_hour",
+		"anthropic-ratelimit-unified-5h-status":            "rejected",
+	}
+	for name, want := range wantHeaders {
+		if got := recorder.Header().Get(name); got != want {
+			t.Fatalf("%s = %q, want %q", name, got, want)
+		}
+	}
+	if recorder.Header().Get("Retry-After") == "" {
+		t.Fatal("Retry-After missing")
 	}
 }
 

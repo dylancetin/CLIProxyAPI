@@ -85,6 +85,9 @@ type modelCooldownError struct {
 	resetIn  time.Duration
 	provider string
 	cause    error
+	// rateLimitHeaders replays the Anthropic unified rate-limit rejection behind
+	// a Claude cooldown. See attachClaudeCooldownRateLimitHeaders.
+	rateLimitHeaders http.Header
 }
 
 // NewModelCooldownError creates an error representing model-level cooldown.
@@ -358,6 +361,11 @@ func (e *modelCooldownError) Headers() http.Header {
 		resetSeconds = 0
 	}
 	headers.Set("Retry-After", strconv.Itoa(resetSeconds))
+	for name, values := range e.rateLimitHeaders {
+		for _, value := range values {
+			headers.Add(name, value)
+		}
+	}
 	return headers
 }
 

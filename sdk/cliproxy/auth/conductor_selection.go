@@ -708,7 +708,9 @@ func restoreModelCooldownErrorModel(err error, requestedModel string) error {
 	if !errors.As(err, &cooldownErr) || cooldownErr == nil || cooldownErr.model != "" {
 		return err
 	}
-	return newModelCooldownErrorWithCause(requestedModel, cooldownErr.provider, cooldownErr.resetIn, cooldownErr.cause)
+	restored := newModelCooldownErrorWithCause(requestedModel, cooldownErr.provider, cooldownErr.resetIn, cooldownErr.cause)
+	restored.rateLimitHeaders = cooldownErr.rateLimitHeaders
+	return restored
 }
 
 func latestUnauthorizedCandidateError(auths []*Auth) error {
@@ -1877,7 +1879,7 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 	available, selectorAuths, errAvailable := m.availableAuthsForSelector(selector, candidates, provider, model, now)
 	if errAvailable != nil {
 		m.mu.RUnlock()
-		m.warnLogAuthUnavailable(ctx, []string{provider}, model, opts, tried, errAvailable)
+		m.reportAuthUnavailable(ctx, []string{provider}, model, opts, tried, errAvailable)
 		return nil, nil, errAvailable
 	}
 	transientAuthIDs := m.transientlyUnavailableSessionAffinityAuthIDs(selector, affinityCandidates, model, now)
@@ -1885,7 +1887,7 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 
 	selected, handled, errPick := m.pickViaPluginScheduler(ctx, pluginScheduler, provider, []string{provider}, model, opts, tried, available)
 	if errPick != nil {
-		m.warnLogAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
+		m.reportAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
 		return nil, nil, errPick
 	}
 	if !handled {
@@ -1896,7 +1898,7 @@ func (m *Manager) pickNextLegacy(ctx context.Context, provider, model string, op
 			if isBuiltInSelector(selector) {
 				errPick = restoreModelCooldownErrorModel(errPick, model)
 			}
-			m.warnLogAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
+			m.reportAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
 			return nil, nil, errPick
 		}
 	}
@@ -2123,7 +2125,7 @@ func (m *Manager) pickNext(ctx context.Context, provider, model string, opts cli
 		selected, errPick = m.scheduler.pickSingle(ctx, provider, model, opts, tried)
 	}
 	if errPick != nil {
-		m.warnLogAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
+		m.reportAuthUnavailable(ctx, []string{provider}, model, opts, tried, errPick)
 		return nil, nil, errPick
 	}
 	if selected == nil {
@@ -2223,7 +2225,7 @@ func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, m
 	available, selectorAuths, errAvailable := m.availableAuthsForSelector(selector, candidates, "mixed", model, now)
 	if errAvailable != nil {
 		m.mu.RUnlock()
-		m.warnLogAuthUnavailable(ctx, providers, model, opts, tried, errAvailable)
+		m.reportAuthUnavailable(ctx, providers, model, opts, tried, errAvailable)
 		return nil, nil, "", errAvailable
 	}
 	transientAuthIDs := m.transientlyUnavailableSessionAffinityAuthIDs(selector, affinityCandidates, model, now)
@@ -2231,7 +2233,7 @@ func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, m
 
 	selected, handled, errPick := m.pickViaPluginScheduler(ctx, pluginScheduler, "mixed", providers, model, opts, tried, available)
 	if errPick != nil {
-		m.warnLogAuthUnavailable(ctx, providers, model, opts, tried, errPick)
+		m.reportAuthUnavailable(ctx, providers, model, opts, tried, errPick)
 		return nil, nil, "", errPick
 	}
 	if !handled {
@@ -2242,7 +2244,7 @@ func (m *Manager) pickNextMixedLegacy(ctx context.Context, providers []string, m
 			if isBuiltInSelector(selector) {
 				errPick = restoreModelCooldownErrorModel(errPick, model)
 			}
-			m.warnLogAuthUnavailable(ctx, providers, model, opts, tried, errPick)
+			m.reportAuthUnavailable(ctx, providers, model, opts, tried, errPick)
 			return nil, nil, "", errPick
 		}
 	}
@@ -2331,7 +2333,7 @@ func (m *Manager) pickNextMixed(ctx context.Context, providers []string, model s
 		selected, providerKey, errPick = m.scheduler.pickMixed(ctx, eligibleProviders, model, opts, tried)
 	}
 	if errPick != nil {
-		m.warnLogAuthUnavailable(ctx, eligibleProviders, model, opts, tried, errPick)
+		m.reportAuthUnavailable(ctx, eligibleProviders, model, opts, tried, errPick)
 		return nil, nil, "", errPick
 	}
 	if selected == nil {
@@ -2394,7 +2396,11 @@ func authCoolingSummary(auth *Auth, model string, next time.Time, now time.Time)
 	return fmt.Sprintf("[%s, reason=%s, remaining=%s]", ident, reason, remaining)
 }
 
-func (m *Manager) warnLogAuthUnavailable(ctx context.Context, providers []string, model string, opts cliproxyexecutor.Options, tried map[string]struct{}, err error) {
+// reportAuthUnavailable logs the cooling candidates behind a selection failure.
+// When the earliest-recovering candidate is a Claude credential held by an
+// Anthropic unified rate-limit rejection, it also attaches that rejection's
+// headers to the cooldown error in err.
+func (m *Manager) reportAuthUnavailable(ctx context.Context, providers []string, model string, opts cliproxyexecutor.Options, tried map[string]struct{}, err error) {
 	if m == nil || err == nil || !isAuthUnavailableError(err) {
 		return
 	}
@@ -2413,6 +2419,8 @@ func (m *Manager) warnLogAuthUnavailable(ctx context.Context, providers []string
 
 	coolingSummaries := make([]string, 0)
 	totalCandidates := 0
+	var earliestNext time.Time
+	var earliestRateLimitSignals map[string]string
 	for _, candidate := range m.auths {
 		if candidate == nil || candidate.Disabled {
 			continue
@@ -2445,8 +2453,13 @@ func (m *Manager) warnLogAuthUnavailable(ctx context.Context, providers []string
 		blocked, reason, next := isAuthBlockedForModel(candidate, checkModel, now)
 		if blocked && reason == blockReasonCooldown {
 			coolingSummaries = append(coolingSummaries, authCoolingSummary(candidate, checkModel, next, now))
+			if !next.IsZero() && (earliestNext.IsZero() || next.Before(earliestNext)) {
+				earliestNext = next
+				earliestRateLimitSignals = claudeCooldownRateLimitSignals(candidate, checkModel, now)
+			}
 		}
 	}
+	attachClaudeCooldownRateLimitHeaders(err, earliestRateLimitSignals, now)
 
 	if len(coolingSummaries) > 0 {
 		sort.Strings(coolingSummaries)

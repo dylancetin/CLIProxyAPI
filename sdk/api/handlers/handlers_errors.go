@@ -113,6 +113,23 @@ func enrichAuthSelectionError(err error, providers []string, model string) error
 	return enriched
 }
 
+// WriteSafeErrorHeaders copies the client-safe headers carried by err to the
+// response: Retry-After, plus the Anthropic unified rate-limit headers that a
+// Claude cooldown replays so clients can show the limit and its reset time.
+func WriteSafeErrorHeaders(c *gin.Context, err error) {
+	if c == nil || err == nil {
+		return
+	}
+	for name, values := range coreauth.SafeResponseHeaders(err) {
+		if http.CanonicalHeaderKey(name) != "Retry-After" && !coreauth.IsAnthropicUnifiedRateLimitHeader(name) {
+			continue
+		}
+		for _, value := range values {
+			c.Writer.Header().Add(name, value)
+		}
+	}
+}
+
 // WriteErrorResponse writes an error message to the response writer using the HTTP status embedded in the message.
 func (h *BaseAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.ErrorMessage) {
 	status := http.StatusInternalServerError
@@ -124,9 +141,7 @@ func (h *BaseAPIHandler) WriteErrorResponse(c *gin.Context, msg *interfaces.Erro
 		return
 	}
 	if msg != nil && msg.Error != nil {
-		for _, value := range coreauth.SafeResponseHeaders(msg.Error).Values("Retry-After") {
-			c.Writer.Header().Add("Retry-After", value)
-		}
+		WriteSafeErrorHeaders(c, msg.Error)
 	}
 	if msg != nil && msg.Addon != nil && PassthroughHeadersEnabled(h.CurrentConfig()) {
 		for key, values := range msg.Addon {
