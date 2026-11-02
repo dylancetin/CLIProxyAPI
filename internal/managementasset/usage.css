@@ -133,8 +133,13 @@ html[data-cpa-page] .sidebar .nav-item.active:not([data-cpa-owned]) { background
 .cpa-u-key:hover { background: var(--bg-hover); color: var(--text-primary); }
 .cpa-u-key i { flex: none; width: 10px; height: 10px; border-radius: 3px; background: var(--c); }
 .cpa-u-key i.is-line { height: 2px; width: 14px; border-radius: 1px; }
+/* Slots past the eighth reuse a hue with a hatch (bars, areas) or a dash (lines); stripes are a surface-tinted step of the hue. */
+.cpa-u-key i.is-p1 { background: repeating-linear-gradient(135deg, var(--c) 0 2.5px, color-mix(in srgb, var(--c) 40%, var(--bg-primary)) 2.5px 4px); }
+.cpa-u-key i.is-p2 { background: repeating-linear-gradient(45deg, var(--c) 0 2.5px, color-mix(in srgb, var(--c) 40%, var(--bg-primary)) 2.5px 4px); }
+.cpa-u-key i.is-line.is-p1, .cpa-u-tiprow i.is-p1 { background: repeating-linear-gradient(90deg, var(--c) 0 4px, transparent 4px 6px); }
+.cpa-u-key i.is-line.is-p2, .cpa-u-tiprow i.is-p2 { background: repeating-linear-gradient(90deg, var(--c) 0 2px, transparent 2px 4px); }
 .cpa-u-key[aria-pressed="false"] { opacity: 0.45; }
-.cpa-u-key[aria-pressed="false"] i { background: none; box-shadow: inset 0 0 0 1.5px var(--c); }
+.cpa-u-key[aria-pressed="false"] i, .cpa-u-key[aria-pressed="false"] i[class] { background: none; box-shadow: inset 0 0 0 1.5px var(--c); }
 
 .cpa-u-plot { position: relative; min-height: 240px; transition: opacity 0.2s; }
 .cpa-u-plot.is-loading { opacity: 0.55; }
@@ -146,6 +151,10 @@ html[data-cpa-page] .sidebar .nav-item.active:not([data-cpa-owned]) { background
 .cpa-u-bar { fill: var(--c); }
 .cpa-u-area { fill: var(--c); fill-opacity: 0.28; }
 .cpa-u-line { fill: none; stroke: var(--c); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.cpa-u-line.is-p1 { stroke-dasharray: 7 4; }
+.cpa-u-line.is-p2 { stroke-dasharray: 0.5 5; }
+.cpa-u-hatch rect { fill: var(--c); }
+.cpa-u-hatch line { stroke: color-mix(in srgb, var(--c) 40%, var(--bg-primary)); stroke-width: 2.5; }
 .cpa-u-dot { fill: var(--c); stroke: var(--bg-primary); stroke-width: 2; }
 .cpa-u-band { fill: color-mix(in srgb, var(--text-primary) 7%, transparent); }
 .cpa-u-cross { stroke: var(--text-tertiary); }

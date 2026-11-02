@@ -5,8 +5,13 @@ import test from "node:test";
 import vm from "node:vm";
 
 const script = readFileSync(new URL("usage.js", import.meta.url), "utf8");
-const h = {};
-vm.runInNewContext(script, { __cpaUsageHarness: h, TextEncoder, TextDecoder, atob, URL });
+// Each call is a fresh page load with no state carried over in memory.
+const load = () => {
+  const harness = {};
+  vm.runInNewContext(script, { __cpaUsageHarness: harness, TextEncoder, TextDecoder, atob, URL });
+  return harness;
+};
+const h = load();
 // Values built inside the sandbox carry its prototypes; compare their JSON shape.
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const HOUR = 3600e3;
@@ -212,26 +217,112 @@ test("CSV quotes separators and neutralizes formulas", () => {
   assert.equal(h.csvCell("line\nbreak"), '"line\nbreak"');
 });
 
-test("folds the tail beyond eight series into other", () => {
-  const series = Array.from({ length: 10 }, (_, i) => ({ key: { model: `m${i}` }, points: [point(i + 1)], total: point(i + 1) }));
+const named = (count, dim = "model") => Array.from({ length: count }, (_, i) => ({ key: { [dim]: `m${i}` }, points: [point(i + 1)], total: point(i + 1) }));
+
+test("folds the tail beyond the top N into other", () => {
+  const series = named(10);
   series.push({ key: { model: "other" }, points: [point(100)], total: point(100) });
-  const folded = h.foldSeries(series, ["model"]);
+  const folded = h.foldSeries(series, ["model"], 8);
   assert.equal(folded.length, 9);
-  assert.deepEqual(plain(folded.slice(0, 8).map((entry) => entry.id)), ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7"]);
+  assert.deepEqual(plain(folded.slice(0, 8).map((entry) => entry.id)), ["m0", "m1", "m2", "m3", "m4", "m5", "m6", "m7"].map((m) => `model=${m}`));
   assert.equal(folded[8].other, true);
   assert.equal(folded[8].points[0].requests, 9 + 10 + 100);
   assert.equal(folded[8].total.requests, 119);
   assert.equal(h.foldSeries([{ key: {}, points: [point(1)], total: point(1) }], [])[0].id, "total");
-  assert.equal(h.seriesId({ provider: "claude", model: "" }, ["provider", "model"]), "claude\u001f");
+  assert.equal(h.seriesId({ provider: "claude", model: "" }, ["provider", "model"]), "provider=claude\u001fmodel=");
+  assert.notEqual(h.seriesId({ provider: "x" }, ["provider"]), h.seriesId({ model: "x" }, ["model"]));
 });
 
-test("colors stay with their series when the set changes", () => {
-  const memory = new Map();
-  assert.deepEqual(plain([...h.assignColors(["a", "b", "c"], memory)]), [["a", 0], ["b", 1], ["c", 2]]);
-  assert.deepEqual(plain([...h.assignColors(["c", "a", "d"], memory)]), [["c", 2], ["a", 0], ["d", 1]]);
-  const many = h.assignColors(["1", "2", "3", "4", "5", "6", "7", "8", "9"], new Map(), 8);
-  assert.equal(many.size, 8);
-  assert.equal(many.has("9"), false);
+const styled = (list, remembered) => {
+  const { slots, memory } = h.assignColors(list.filter((entry) => !entry.other).map((entry) => entry.id), remembered);
+  return { styles: list.map((entry) => h.slotStyle(entry.other ? -1 : slots.get(entry.id))), slots, memory };
+};
+
+test("top 10 of 12 series keeps 10 named series with distinct styles plus other", () => {
+  const folded = h.foldSeries(named(12), ["model"], 10);
+  assert.equal(folded.length, 11);
+  assert.equal(folded.filter((entry) => !entry.other).length, 10);
+  assert.equal(folded.at(-1).other, true);
+  assert.equal(folded.at(-1).total.requests, 11 + 12);
+  const { styles } = styled(folded, []);
+  assert.equal(new Set(styles.map((style) => style.token)).size, 11);
+  assert.equal(styles.at(-1).color, "var(--cpa-series-other)");
+});
+
+test("top 20 shows twenty distinguishable styles from eight hues", () => {
+  const folded = h.foldSeries(named(25), ["model"], 20);
+  assert.equal(folded.filter((entry) => !entry.other).length, 20);
+  const { styles } = styled(folded, []);
+  const tokens = styles.slice(0, 20).map((style) => style.token);
+  assert.equal(new Set(tokens).size, 20);
+  for (const style of styles.slice(0, 20)) {
+    assert.match(style.color, /^var\(--cpa-series-[1-8]\)$/);
+    assert.ok([0, 1, 2].includes(style.pattern));
+  }
+  // Solid slots fill before hatched ones.
+  assert.equal(styles.slice(0, 20).filter((style) => style.pattern === 0).length, 8);
+  assert.equal(styles.slice(0, 20).filter((style) => style.pattern === 1).length, 8);
+});
+
+test("eight or fewer series are all solid", () => {
+  const { styles } = styled(h.foldSeries(named(8), ["model"], 10), []);
+  assert.ok(styles.every((style) => style.pattern === 0));
+  assert.equal(new Set(styles.map((style) => style.color)).size, 8);
+});
+
+test("other is always the neutral grey", () => {
+  for (const slot of [-1, undefined, null, h.SLOTS, 1.5, "3"]) assert.equal(h.slotStyle(slot).color, "var(--cpa-series-other)");
+  const folded = h.foldSeries([...named(3), { key: { model: "other" }, points: [point(1)], total: point(1) }], ["model"], 10);
+  const { styles } = styled(folded, [[folded.at(-1).id, 0], ["model=other", 1]]);
+  assert.equal(styles.at(-1).color, "var(--cpa-series-other)");
+  assert.ok(styles.slice(0, -1).every((style) => style.color !== "var(--cpa-series-other)"));
+});
+
+test("the same key gets the same color in two fresh runs with the same stored state", () => {
+  const stored = JSON.stringify({ colors: [["provider=gemini", 5]] });
+  const ids = ["provider=claude", "provider=codex", "provider=gemini", "provider=openai"];
+  const [a, b] = [load(), load()].map((run) => run.assignColors(ids, run.sanitizeView(JSON.parse(stored)).colors));
+  assert.deepEqual(plain([...a.slots]), plain([...b.slots]));
+  assert.equal(a.slots.get("provider=gemini"), 5);
+  // Without stored state the key's hash alone decides, whatever else is on screen.
+  const alone = load().assignColors(["provider=codex"]).slots.get("provider=codex");
+  assert.equal(alone, h.hashKey("provider=codex") % 8);
+  assert.equal(load().assignColors(["provider=codex", "provider=zzz"]).slots.get("provider=codex"), alone);
+});
+
+test("collisions probe the next hue, solid before hatched", () => {
+  const start = h.hashKey("provider=x") % 8;
+  const taken = Array.from({ length: 8 }, (_, i) => [`k${i}`, i]).filter(([, slot]) => slot !== (start + 1) % 8);
+  const { slots } = h.assignColors(["provider=x", ...taken.map(([id]) => id)], taken);
+  assert.equal(slots.get("provider=x"), (start + 1) % 8);
+  const full = Array.from({ length: 8 }, (_, i) => [`k${i}`, i]);
+  assert.equal(h.assignColors(["provider=x", ...full.map(([id]) => id)], full).slots.get("provider=x"), 8 + start);
+});
+
+test("a stored assignment survives a reload of state", () => {
+  const first = h.assignColors(["provider=claude", "provider=codex", "provider=gemini"]);
+  const view = h.sanitizeView({ ...h.sanitizeView(null), colors: first.memory });
+  const reloaded = load().sanitizeView(JSON.parse(JSON.stringify(view)));
+  assert.deepEqual(plain(reloaded.colors), plain(first.memory));
+  // A different set and order on screen keeps each remembered slot.
+  const next = load().assignColors(["provider=new", "provider=gemini", "provider=claude"], reloaded.colors);
+  assert.equal(next.slots.get("provider=gemini"), first.slots.get("provider=gemini"));
+  assert.equal(next.slots.get("provider=claude"), first.slots.get("provider=claude"));
+  // A remembered slot overrides the hash.
+  const moved = (h.hashKey("provider=claude") + 3) % 8;
+  assert.equal(h.assignColors(["provider=claude"], [["provider=claude", moved]]).slots.get("provider=claude"), moved);
+});
+
+test("color memory keeps the most recently shown keys within its bound", () => {
+  const old = Array.from({ length: h.MEMORY }, (_, i) => [`k${i}`, i % h.SLOTS]);
+  const { memory } = h.assignColors(["k0", "fresh"], old);
+  assert.equal(memory.length, h.MEMORY);
+  assert.deepEqual(plain(memory.slice(-2).map(([id]) => id)), ["k0", "fresh"]);
+  assert.equal(memory.some(([id]) => id === "k1"), false);
+  const view = h.sanitizeView({ colors: [...old, ["k0", 23], ["bad", 24], ["neg", -1], [7, 1], "x", ["frac", 1.5]] });
+  assert.equal(view.colors.length, h.MEMORY);
+  assert.deepEqual(plain(view.colors.at(-1)), ["k0", 23]);
+  assert.equal(view.colors.some(([id]) => ["bad", "neg", "frac"].includes(id)), false);
 });
 
 test("x ticks align to local hours and UTC days", () => {
@@ -250,7 +341,7 @@ test("labels the UTC offset", () => {
 
 test("restores a saved view and rejects unknown values", () => {
   const view = h.sanitizeView({ range: "7d", bucket: "day", metric: "cost", group: ["model", "account", "provider", "bogus"], type: "lines", scale: "log", top: 20, filters: { provider: ["claude", 3, "claude"], nope: ["x"] }, table: true, auto: true, tab: "api_key" });
-  assert.deepEqual(plain(view), { range: "7d", from: 0, to: 0, bucket: "day", metric: "cost", group: ["model", "account"], type: "lines", scale: "log", top: 20, filters: { provider: ["claude"] }, table: true, auto: true, tab: "api_key" });
+  assert.deepEqual(plain(view), { range: "7d", from: 0, to: 0, bucket: "day", metric: "cost", group: ["model", "account"], type: "lines", scale: "log", top: 20, filters: { provider: ["claude"] }, table: true, auto: true, tab: "api_key", colors: [] });
   const fallback = h.sanitizeView({ range: "toString", metric: "constructor", type: "pie", top: 7, group: "provider", filters: null, from: 5, to: 1 });
   assert.deepEqual(plain(fallback), plain(h.sanitizeView(null)));
   assert.equal(h.sanitizeView({ range: "custom" }).range, "24h");

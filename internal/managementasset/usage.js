@@ -7,7 +7,11 @@
   const RANGES = { "1h": HOUR, "6h": 6 * HOUR, "24h": DAY, "7d": 7 * DAY, "30d": 30 * DAY };
   const TYPES = ["stacked", "grouped", "lines", "area"];
   const TOPS = [5, 10, 20];
-  const SLOTS = 8;
+  // More than eight hues stop being distinguishable, so later slots reuse the
+  // hues with a 45° and then a 135° hatch: 24 slots cover the largest top N.
+  const HUES = 8;
+  const SLOTS = HUES * 3;
+  const MEMORY = 64;
   const TOKEN_FIELDS = ["input_uncached", "input_cache_read", "input_cache_write", "output_reasoning", "output_other", "unclassified", "total"];
   const SUM_FIELDS = ["requests", "failures", "latency_ms_sum", "ttft_ms_sum", "ttft_count", "cost_usd"];
   const MAX_FIELDS = ["latency_ms_max", "ttft_ms_max"];
@@ -199,10 +203,11 @@
     return { step, buckets, series, total: normPoint(response?.total) };
   }
 
-  const seriesId = (key, group) => (group.length ? group.map((dim) => String(key[dim] ?? "")).join(SEP) : "total");
+  // Dimension names are part of the id so remembered colors never cross groupings.
+  const seriesId = (key, group) => (group.length ? group.map((dim) => `${dim}=${key[dim] ?? ""}`).join(SEP) : "total");
 
-  // A ninth hue would be indistinguishable, so the tail joins the server's "other".
-  function foldSeries(series, group, max = SLOTS) {
+  // The server already caps at top N; anything beyond it joins the server's "other".
+  function foldSeries(series, group, max = TOPS.at(-1)) {
     const isOther = (entry) => group.length > 0 && group.every((dim) => entry.key[dim] === "other");
     const named = series.filter((entry) => !isOther(entry));
     const kept = named.slice(0, max).map((entry) => ({ ...entry, id: seriesId(entry.key, group), other: false }));
@@ -219,8 +224,17 @@
     return kept;
   }
 
-  // Colors follow the entity: a series keeps its slot while it stays on screen.
-  function assignColors(ids, memory, slots = SLOTS) {
+  function hashKey(text) {
+    let hash = 0x811c9dc5;
+    for (let i = 0; i < text.length; i++) hash = Math.imul(hash ^ text.charCodeAt(i), 0x01000193);
+    return hash >>> 0;
+  }
+
+  // Colors follow the entity: a remembered slot wins, otherwise the key's hash
+  // picks a hue and collisions probe the next hue, solid slots before hatched.
+  // Returns the slots and the updated memory, most recently shown last.
+  function assignColors(ids, remembered = []) {
+    const memory = new Map(remembered);
     const used = new Set();
     const out = new Map();
     for (const id of ids) {
@@ -232,14 +246,27 @@
     }
     for (const id of ids) {
       if (out.has(id)) continue;
-      let slot = 0;
-      while (used.has(slot)) slot++;
-      if (slot >= slots) continue;
-      out.set(id, slot);
-      used.add(slot);
+      const start = hashKey(id) % HUES;
+      for (let step = 0; step < SLOTS; step++) {
+        const slot = step - (step % HUES) + ((start + step) % HUES);
+        if (used.has(slot)) continue;
+        out.set(id, slot);
+        used.add(slot);
+        break;
+      }
+    }
+    for (const [id, slot] of out) {
+      memory.delete(id);
       memory.set(id, slot);
     }
-    return out;
+    return { slots: out, memory: [...memory].slice(-MEMORY) };
+  }
+
+  // Slot n is hue n % 8 with pattern 0 (solid), 1 (45° hatch, dashed line) or 2 (135° hatch, dotted line).
+  function slotStyle(slot) {
+    if (!(Number.isInteger(slot) && slot >= 0 && slot < SLOTS)) return { color: "var(--cpa-series-other)", pattern: 0, token: "other" };
+    const hue = (slot % HUES) + 1, pattern = Math.floor(slot / HUES);
+    return { color: `var(--cpa-series-${hue})`, pattern, token: `${hue}/${pattern}` };
   }
 
   function csvCell(value) {
@@ -326,11 +353,11 @@
 
   const DEFAULT_VIEW = {
     range: "24h", from: 0, to: 0, bucket: "hour", metric: "tokens", group: ["provider"], type: "stacked",
-    scale: "linear", top: 10, filters: {}, table: false, auto: false, tab: "provider",
+    scale: "linear", top: 10, filters: {}, table: false, auto: false, tab: "provider", colors: [],
   };
 
   function sanitizeView(raw) {
-    const view = { ...DEFAULT_VIEW, group: DEFAULT_VIEW.group.slice(), filters: {} };
+    const view = { ...DEFAULT_VIEW, group: DEFAULT_VIEW.group.slice(), filters: {}, colors: [] };
     if (!raw || typeof raw !== "object") return view;
     if (Object.hasOwn(RANGES, raw.range) || raw.range === "custom") view.range = raw.range;
     if (Number.isFinite(raw.from) && Number.isFinite(raw.to) && raw.from < raw.to) Object.assign(view, { from: raw.from, to: raw.to });
@@ -348,6 +375,15 @@
     view.table = raw.table === true;
     view.auto = raw.auto === true;
     if (DIMS.includes(raw.tab)) view.tab = raw.tab;
+    if (Array.isArray(raw.colors)) {
+      const colors = new Map();
+      for (const pair of raw.colors) {
+        if (!Array.isArray(pair) || typeof pair[0] !== "string" || !(Number.isInteger(pair[1]) && pair[1] >= 0 && pair[1] < SLOTS)) continue;
+        colors.delete(pair[0]);
+        colors.set(pair[0], pair[1]);
+      }
+      view.colors = [...colors].slice(-MEMORY);
+    }
     return view;
   }
 
@@ -355,8 +391,9 @@
   if (harness && typeof harness === "object") {
     Object.assign(harness, {
       compact, duration, usd, formatValue, parseTime, bucketRange, utcOffsetLabel, tickIndexes, linearScale, logScale,
-      niceTicks, logTicks, linePath, areaPath, barPath, stack, densify, foldSeries, seriesId, assignColors, csvCell,
-      buildCSV, parseHash, buildHash, decodeAuth, managementBase, baseFromUrl, keyFromHeader, sanitizeView, METRICS,
+      niceTicks, logTicks, linePath, areaPath, barPath, stack, densify, foldSeries, seriesId, hashKey, assignColors,
+      slotStyle, csvCell, buildCSV, parseHash, buildHash, decodeAuth, managementBase, baseFromUrl, keyFromHeader,
+      sanitizeView, METRICS, SLOTS, MEMORY,
     });
     return;
   }
@@ -463,7 +500,6 @@
     .replace(/\{(\d)\}/g, (_, i) => args[i] ?? "");
 
   const hidden = new Set();
-  const colorMemory = new Map();
   const formats = {};
   let view = sanitizeView(readStored());
   let page = null, ui = null, data = null, error = null, loading = false, prices, priceRows = [];
@@ -656,7 +692,6 @@
     const dims = [["", t("none")], ...DIMS.map((dim) => [dim, t(`d_${dim}`)])];
     const setGroup = () => {
       hidden.clear();
-      colorMemory.clear();
       set({ group: [...new Set([ui.group1.value, ui.group1.value && ui.group2.value].filter(Boolean))] }, true);
     };
     ui.metric = select(Object.keys(METRICS).map((metric) => [metric, t(`m_${metric}`)]), (metric) => set({ metric }));
@@ -820,11 +855,15 @@
   }
 
   function renderChart() {
-    const metric = METRICS[view.metric], group = data.group, list = foldSeries(data.series.series, group);
-    const colors = assignColors(list.filter((entry) => !entry.other).map((entry) => entry.id), colorMemory);
+    const metric = METRICS[view.metric], group = data.group, list = foldSeries(data.series.series, group, view.top);
+    const { slots, memory } = assignColors(list.filter((entry) => !entry.other).map((entry) => entry.id), view.colors);
+    if (JSON.stringify(memory) !== JSON.stringify(view.colors)) {
+      view.colors = memory;
+      saveView();
+    }
     for (const entry of list) {
+      Object.assign(entry, slotStyle(entry.other ? -1 : slots.get(entry.id)));
       entry.label = seriesLabel(entry, group);
-      entry.color = entry.other ? "var(--cpa-series-other)" : `var(--cpa-series-${(colors.get(entry.id) ?? 0) + 1})`;
       entry.values = entry.points.map(metric.get);
     }
     const model = { metric, list, type: effectiveType(metric), visible: list.filter((entry) => !hidden.has(entry.id)) };
@@ -836,7 +875,7 @@
   }
 
   function renderLegend({ list, type }) {
-    const signature = type + list.map((entry) => SEP + entry.id + entry.color + entry.label).join("");
+    const signature = type + list.map((entry) => SEP + entry.id + entry.token + entry.label).join("");
     if (ui.legend.dataset.signature !== signature) {
       ui.legend.dataset.signature = signature;
       ui.legend.replaceChildren(...list.map((entry) => paint(el("button", {
@@ -851,7 +890,8 @@
           solo(entry.id, list);
           renderChart();
         },
-      }, el("i", { class: type === "lines" ? "is-line" : null }), el("span", { text: entry.label })), entry.color)));
+      }, el("i", { class: [type === "lines" && "is-line", entry.pattern && `is-p${entry.pattern}`].filter(Boolean).join(" ") || null }),
+      el("span", { text: entry.label })), entry.color)));
     }
     ui.legend.hidden = list.length < 2 || view.table;
     for (const node of ui.legend.children) node.setAttribute("aria-pressed", String(!hidden.has(node.dataset.id)));
@@ -912,12 +952,27 @@
     const offset = utcOffsetLabel(-new Date(buckets[n - 1]).getTimezoneOffset());
     grid.append(text(right, height - 3, day ? t("utcDays") : t("localTime", offset), "end", "cpa-u-axis-title"));
 
-    const marks = svg("g");
+    const marks = svg("g"), defs = svg("defs"), hatches = new Set();
     const dot = (x, yy, color) => paint(svg("circle", { cx: fx(x), cy: fx(yy), r: 4, class: "cpa-u-dot" }), color);
-    const path = (d, cls, color) => marks.append(paint(svg("path", { d, class: cls }), color));
-    const trace = (ys, color) => {
-      path(linePath(xs, ys), "cpa-u-line", color);
-      ys.forEach((yy, i) => yy != null && ys[i - 1] == null && ys[i + 1] == null && marks.append(dot(xs[i], yy, color)));
+    const hatch = (entry) => {
+      const id = `cpa-u-hatch-${entry.token.replace("/", "-")}`;
+      if (!hatches.has(id)) {
+        hatches.add(id);
+        const pattern = paint(svg("pattern", { id, class: "cpa-u-hatch", width: 6, height: 6, patternUnits: "userSpaceOnUse",
+          patternTransform: `rotate(${entry.pattern === 1 ? 45 : -45})` }), entry.color);
+        pattern.append(svg("rect", { width: 6, height: 6 }), svg("line", { x1: 1.5, x2: 1.5, y2: 6 }));
+        defs.append(pattern);
+      }
+      return `url(#${id})`;
+    };
+    const path = (d, cls, entry) => {
+      const node = paint(svg("path", { d, class: entry.pattern ? `${cls} is-p${entry.pattern}` : cls }), entry.color);
+      if (entry.pattern && cls !== "cpa-u-line") node.style.fill = hatch(entry);
+      marks.append(node);
+    };
+    const trace = (ys, entry) => {
+      path(linePath(xs, ys), "cpa-u-line", entry);
+      ys.forEach((yy, i) => yy != null && ys[i - 1] == null && ys[i + 1] == null && marks.append(dot(xs[i], yy, entry.color)));
     };
     if (type === "stacked") {
       const barWidth = Math.max(1, Math.min(24, band * 0.72));
@@ -927,26 +982,26 @@
         const y0 = y(low), y1 = y(high), isTop = topmost[i] === j;
         // A 2px surface gap separates touching segments.
         return barPath(cx(i) - barWidth / 2, barWidth, y0, !isTop && y0 - y1 > 3 ? y1 + 2 : y1, isTop ? 4 : 0);
-      }).join(""), "cpa-u-bar", entry.color));
+      }).join(""), "cpa-u-bar", entry));
     } else if (type === "grouped") {
       const k = Math.max(1, visible.length), groupWidth = Math.min(band * 0.8, k * 24 + (k - 1) * 2);
       const gap = groupWidth / k > 6 ? 2 : 0, barWidth = Math.max(0.5, (groupWidth - gap * (k - 1)) / k);
       visible.forEach((entry, j) => path(entry.values.map((value, i) => (value > 0
-        ? barPath(cx(i) - groupWidth / 2 + j * (barWidth + gap), barWidth, base, y(value)) : "")).join(""), "cpa-u-bar", entry.color));
+        ? barPath(cx(i) - groupWidth / 2 + j * (barWidth + gap), barWidth, base, y(value)) : "")).join(""), "cpa-u-bar", entry));
     } else if (type === "lines") {
-      for (const entry of visible) trace(entry.values.map((value) => (value == null || (log && !(value > 0)) ? null : y(value))), entry.color);
+      for (const entry of visible) trace(entry.values.map((value) => (value == null || (log && !(value > 0)) ? null : y(value))), entry);
     } else {
       visible.forEach((entry, j) => {
         const tops = layers[j].map(([, high]) => y(high));
-        path(areaPath(xs, tops, layers[j].map(([low]) => y(low))), "cpa-u-area", entry.color);
-        trace(tops, entry.color);
+        path(areaPath(xs, tops, layers[j].map(([low]) => y(low))), "cpa-u-area", entry);
+        trace(tops, entry);
       });
     }
 
     const highlight = svg("rect", { y: top, height: base - top, width: fx(band), class: "cpa-u-band", display: "none" });
     const cross = svg("line", { y1: top, y2: base, class: "cpa-u-cross", display: "none" });
     const dots = svg("g");
-    chart.append(grid, highlight, cross, marks, dots);
+    chart.append(defs, grid, highlight, cross, marks, dots);
     const show = (i) => {
       const x = cx(i);
       hoverIndex = i;
@@ -987,11 +1042,11 @@
   }
 
   function showTip(i, x, width, metric, list, visible) {
-    const row = (color, value, name, cls = "") => paint(el("div", { class: `cpa-u-tiprow ${cls}` },
-      el("i"), el("strong", { text: formatValue(value, metric.unit) }), el("span", { text: name })), color);
+    const row = (color, value, name, cls = "", pattern = 0) => paint(el("div", { class: `cpa-u-tiprow ${cls}` },
+      el("i", { class: pattern ? `is-p${pattern}` : null }), el("strong", { text: formatValue(value, metric.unit) }), el("span", { text: name })), color);
     const total = metric.get(list.reduce((sum, entry) => addPoints(sum, entry.points[i]), normPoint()));
     ui.tip.replaceChildren(el("div", { class: "cpa-u-tiptime", text: bucketLabel(data.series.buckets[i]) }),
-      ...visible.filter((entry) => entry.values[i] != null).map((entry) => row(entry.color, entry.values[i], entry.label)),
+      ...visible.filter((entry) => entry.values[i] != null).map((entry) => row(entry.color, entry.values[i], entry.label, "", entry.pattern)),
       ...(list.length > 1 ? [row("transparent", total, t(metric.avg ? "overall" : "total"), "is-total")] : []));
     ui.tip.hidden = false;
     const flip = x > width * 0.6;
