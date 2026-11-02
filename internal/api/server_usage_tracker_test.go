@@ -127,6 +127,37 @@ func TestUsageTrackerOpenFailureContinues(t *testing.T) {
 	}
 }
 
+func TestUsageTrackerEmptyAuthDirOpensNothing(t *testing.T) {
+	hook := captureLogs(t)
+	calls := stubUsageStoreOpener(t, nil)
+	server := newTestServer(t)
+	cfg := trackerConfig(server)
+	authDir := cfg.AuthDir
+	cfg.AuthDir = ""
+
+	server.UpdateClients(&cfg)
+	server.UpdateClients(&cfg)
+	if len(*calls) != 0 || server.mgmt.UsageStore() != nil {
+		t.Fatalf("tracker opened with an empty auth-dir: %+v", *calls)
+	}
+	warnings := 0
+	for _, entry := range hook.AllEntries() {
+		if entry.Level == log.WarnLevel && strings.Contains(entry.Message, "cannot resolve database path") {
+			warnings++
+		}
+	}
+	if warnings != 1 {
+		t.Fatalf("path warnings = %d, want 1", warnings)
+	}
+
+	cfg.AuthDir = authDir
+	server.UpdateClients(&cfg)
+	if len(*calls) != 1 || (*calls)[0].opts.Path != filepath.Join(authDir, proxyconfig.DefaultUsageTrackerFileName) {
+		t.Fatalf("resolved auth-dir did not open the tracker: %+v", *calls)
+	}
+	server.CloseUsageTracker()
+}
+
 func TestUsageTrackerReloadLifecycle(t *testing.T) {
 	hook := captureLogs(t)
 	calls := stubUsageStoreOpener(t, nil)
@@ -216,6 +247,9 @@ func TestUsageTrackerPath(t *testing.T) {
 				t.Fatalf("usageTrackerPath() = %q, %v; want %q", got, errPath, tc.want)
 			}
 		})
+	}
+	if got, errPath := usageTrackerPath(&proxyconfig.Config{}); !errors.Is(errPath, errUsageTrackerNoAuthDir) {
+		t.Fatalf("usageTrackerPath() with empty auth-dir = %q, %v; want errUsageTrackerNoAuthDir", got, errPath)
 	}
 }
 

@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -287,6 +288,8 @@ type usageTrackerRuntime struct {
 	// failedPath suppresses Open retries until the tracker is toggled or moved,
 	// so a persistent failure logs once instead of on every reload.
 	failedPath string
+	// pathWarned logs an unusable path once until it resolves or the tracker is toggled.
+	pathWarned bool
 	closed     bool
 }
 
@@ -313,12 +316,21 @@ func (p *switchableUsagePlugin) setTarget(target usage.Plugin) {
 	p.mu.Unlock()
 }
 
+// errUsageTrackerNoAuthDir rejects an empty auth-dir instead of falling back to
+// the default home directory. Startup and config reloads always resolve
+// auth-dir first, so an empty one means an unresolved config whose database
+// could land in another deployment's directory.
+var errUsageTrackerNoAuthDir = errors.New("auth-dir is empty and sqlite-path is not set")
+
 // usageTrackerPath returns sqlite-path, or usage.sqlite in the resolved auth dir.
 // cfg.AuthDir already points at the local mirror when a remote token store is used.
 func usageTrackerPath(cfg *config.Config) (string, error) {
 	if path := strings.TrimSpace(cfg.UsageTracker.SQLitePath); path != "" {
 		// For a non-empty path ResolveAuthDir only expands a leading ~ and cleans it.
 		return util.ResolveAuthDir(path)
+	}
+	if cfg.AuthDir == "" {
+		return "", errUsageTrackerNoAuthDir
 	}
 	authDir, errResolve := util.ResolveAuthDir(cfg.AuthDir)
 	if errResolve != nil {
@@ -368,14 +380,18 @@ func (s *Server) syncUsageTracker(ctx context.Context, cfg *config.Config) {
 	}
 	if cfg == nil || !cfg.UsageTracker.Enabled || cfg.Home.Enabled {
 		s.closeUsageStoreLocked()
-		t.failedPath = ""
+		t.failedPath, t.pathWarned = "", false
 		return
 	}
 	path, errPath := usageTrackerPath(cfg)
 	if errPath != nil {
-		log.WithError(errPath).Warn("usage tracker unavailable: cannot resolve database path")
+		if !t.pathWarned {
+			t.pathWarned = true
+			log.WithError(errPath).Warn("usage tracker unavailable: cannot resolve database path")
+		}
 		return
 	}
+	t.pathWarned = false
 	raw := usageRetention(cfg.UsageTracker.RawRetentionDays)
 	hourly := usageRetention(cfg.UsageTracker.HourlyRetentionDays)
 	if t.store != nil {
