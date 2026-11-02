@@ -159,7 +159,7 @@ func (s *Store) writeBatch(ctx context.Context, batch []Event) (err error) {
 		ev := &batch[i]
 		hour := hourStart(ev.RequestedAt)
 		latencyMs := ev.Latency.Milliseconds()
-		ttftMs := ev.TTFT.Milliseconds()
+		ttftMs := ceilMilliseconds(ev.TTFT)
 		stream, failed := boolInt(ev.Stream), boolInt(ev.Failed)
 		t := ev.Tokens
 		if _, err = insertEvent.ExecContext(ctx,
@@ -184,6 +184,15 @@ func (s *Store) writeBatch(ctx context.Context, batch []Event) (err error) {
 		return fmt.Errorf("usagestore: commit batch: %w", err)
 	}
 	return nil
+}
+
+// ceilMilliseconds rounds up so a measured sub-millisecond TTFT is stored as
+// 1 ms instead of 0, which the schema reads as unknown.
+func ceilMilliseconds(d time.Duration) int64 {
+	if d <= 0 {
+		return 0
+	}
+	return int64((d + time.Millisecond - 1) / time.Millisecond)
 }
 
 func boolInt(b bool) int64 {

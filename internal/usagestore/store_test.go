@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -133,6 +134,25 @@ func TestPluginStoresAttemptDimensions(t *testing.T) {
 		if got[i] != want[i] {
 			t.Fatalf("column %d = %#v, want %#v", i, got[i], want[i])
 		}
+	}
+}
+
+func TestSubMillisecondTTFTCountsAsKnown(t *testing.T) {
+	s, path := openStore(t, usagestore.Options{})
+	at := t0.Add(time.Minute)
+	publish(s,
+		attempt{at: at, provider: "p", model: "m", latency: 900 * time.Microsecond, ttft: 150 * time.Microsecond},
+		attempt{at: at, provider: "p", model: "m", latency: 1900 * time.Microsecond, ttft: 1200 * time.Microsecond},
+		attempt{at: at, provider: "p", model: "m", latency: 5 * time.Millisecond},
+	)
+	flush(t, s)
+
+	db := openRaw(t, path)
+	if got := queryRows(t, db, `SELECT latency_ms || '/' || ttft_ms FROM usage_events ORDER BY id`); strings.Join(got, ",") != "0/1,1/2,5/0" {
+		t.Fatalf("latency_ms/ttft_ms = %v, want [0/1 1/2 5/0]", got)
+	}
+	if got := queryRows(t, db, `SELECT ttft_ms_sum || '/' || ttft_ms_max || '/' || ttft_count FROM usage_hourly`); strings.Join(got, ",") != "3/2/2" {
+		t.Fatalf("hourly ttft sum/max/count = %v, want [3/2/2]", got)
 	}
 }
 
