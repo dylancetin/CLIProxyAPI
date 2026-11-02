@@ -387,13 +387,90 @@
     return view;
   }
 
+  const STRINGS = {
+    en: {
+      nav: "Usage", range: "Time range", custom: "Custom", from: "From", to: "To", apply: "Apply", bucket: "Bucket",
+      hour: "Hourly", day: "Daily", refresh: "Refresh", auto: "Auto-refresh", filters: "Filters", clear: "Clear filters",
+      removeFilter: "Remove filter {0}", m_requests: "Requests", m_failures: "Failures", m_tokens: "Total tokens",
+      m_input: "Input tokens", m_output: "Output tokens", m_cache_read: "Cache read", m_cache_write: "Cache write",
+      m_reasoning: "Reasoning tokens", m_latency: "Avg latency", m_ttft: "Avg TTFT", m_cost: "Cost",
+      d_provider: "Provider", d_model: "Model", d_requested_model: "Requested model", d_account: "Account",
+      d_api_key: "API key", d_reasoning_effort: "Reasoning effort", d_service_tier: "Service tier", d_stream: "Stream",
+      metric: "Metric", groupBy: "Group by", thenBy: "then", none: "None", chart: "Chart", t_stacked: "Stacked bars",
+      t_grouped: "Grouped bars", t_lines: "Lines", t_area: "Stacked area", scale: "Scale", linear: "Linear", log: "Log",
+      top: "Top", table: "Table", csv: "Export CSV", noStack: "Averages can't be stacked",
+      legendHint: "Click to hide or show. Double-click to show only this.", total: "Total", overall: "Overall",
+      other: "Other", all: "All requests", empty: "(none)", noData: "No usage recorded in this range.",
+      localTime: "Local time ({0})", utcDays: "Days (UTC)", time: "Time", chartBy: "{0} by {1}", inOut: "Input / output",
+      failRate: "{0} of requests", cachedSub: "{0} cache read", reasoningSub: "{0} reasoning", maxSub: "Max {0}",
+      ttftSub: "{0} measured", cost: "Estimated cost", noPrices: "No prices set", breakdown: "Breakdown", prices: "Prices",
+      unpriced: "unpriced", unpricedModel: "1 model unpriced", unpricedModels: "{0} models unpriced",
+      pricesHint: "USD per 1M tokens. Reasoning output uses the output price. A \"default\" row prices every other model.",
+      model: "Model", p_input: "Input", p_cache_read: "Cache read", p_cache_write: "Cache write", p_output: "Output",
+      addModel: "Add model", remove: "Remove", savePrices: "Save prices", saving: "Saving…", saved: "Prices saved.",
+      priceInvalid: "Prices must be numbers of 0 or more.", priceModel: "Every row needs a model name.",
+      priceDuplicate: "{0} is listed twice.",
+      disabled: "Usage tracking is off. Set observability.usage.tracker.enabled to true in config.yaml, then refresh.",
+      nokey: "Sign in to the panel first. This page uses the management key from your current session.",
+      unauthorized: "The server rejected the management key. Sign in again.", network: "Couldn't reach the server.",
+      http: "The request failed (HTTP {0}). {1}", retry: "Retry", loading: "Loading…", updated: "Updated {0}",
+      chartLabel: "{0}, {1} buckets. Arrow keys read values.",
+    },
+    "zh-CN": {
+      nav: "用量", range: "时间范围", custom: "自定义", from: "开始", to: "结束", apply: "应用", bucket: "时间粒度",
+      hour: "按小时", day: "按天", refresh: "刷新", auto: "自动刷新", filters: "筛选", clear: "清除筛选",
+      removeFilter: "移除筛选 {0}", m_requests: "请求数", m_failures: "失败数", m_tokens: "Token 总量",
+      m_input: "输入 Token", m_output: "输出 Token", m_cache_read: "缓存读取", m_cache_write: "缓存写入",
+      m_reasoning: "推理 Token", m_latency: "平均延迟", m_ttft: "平均首字延迟", m_cost: "费用",
+      d_provider: "提供商", d_model: "模型", d_requested_model: "请求模型", d_account: "账号",
+      d_api_key: "API 密钥", d_reasoning_effort: "推理强度", d_service_tier: "服务层级", d_stream: "流式",
+      metric: "指标", groupBy: "分组", thenBy: "再按", none: "无", chart: "图表", t_stacked: "堆叠柱状",
+      t_grouped: "分组柱状", t_lines: "折线", t_area: "堆叠面积", scale: "刻度", linear: "线性", log: "对数",
+      top: "前", table: "表格", csv: "导出 CSV", noStack: "平均值不能堆叠",
+      legendHint: "单击显示或隐藏，双击仅显示此项。", total: "合计", overall: "整体",
+      other: "其他", all: "全部请求", empty: "（空）", noData: "该时间范围内没有用量记录。",
+      localTime: "本地时间（{0}）", utcDays: "日期（UTC）", time: "时间", chartBy: "{0}（按{1}）", inOut: "输入 / 输出",
+      failRate: "占请求的 {0}", cachedSub: "缓存读取 {0}", reasoningSub: "推理 {0}", maxSub: "最大 {0}",
+      ttftSub: "已测量 {0}", cost: "预估费用", noPrices: "未设置价格", breakdown: "明细", prices: "价格",
+      unpriced: "未定价", unpricedModel: "1 个模型未定价", unpricedModels: "{0} 个模型未定价",
+      pricesHint: "单位：美元 / 百万 Token。推理输出按输出价格计费。\"default\" 行用于其余所有模型。",
+      model: "模型", p_input: "输入", p_cache_read: "缓存读取", p_cache_write: "缓存写入", p_output: "输出",
+      addModel: "添加模型", remove: "删除", savePrices: "保存价格", saving: "保存中…", saved: "价格已保存。",
+      priceInvalid: "价格必须是大于或等于 0 的数字。", priceModel: "每一行都需要填写模型名称。",
+      priceDuplicate: "{0} 重复出现。",
+      disabled: "用量统计未启用。请在 config.yaml 中将 observability.usage.tracker.enabled 设为 true，然后刷新。",
+      nokey: "请先登录面板。此页面使用当前会话的管理密钥。",
+      unauthorized: "服务器拒绝了管理密钥，请重新登录。", network: "无法连接到服务器。",
+      http: "请求失败（HTTP {0}）。{1}", retry: "重试", loading: "加载中…", updated: "更新于 {0}",
+      chartLabel: "{0}，{1} 个时间段。方向键读取数值。",
+    },
+  };
+
+  const translate = (lang, key, ...args) => ((STRINGS[lang] || STRINGS.en)[key] ?? STRINGS.en[key] ?? key)
+    .replace(/\{(\d)\}/g, (_, i) => args[i] ?? "");
+
+  // Same lookup as the server: an exact entry, else the "default" entry.
+  const isPriced = (prices, model) => Object.hasOwn(prices, model) || Object.hasOwn(prices, "default");
+
+  // cost_usd is 0 for both a zero price and a missing one, so only the price map
+  // tells them apart. Without a loaded map (null) nothing is claimed either way.
+  const unpricedLabel = (prices, model, tr) => (prices && !isPriced(prices, String(model ?? "")) ? tr("unpriced") : "");
+
+  function costSub(prices, summary, tr) {
+    if (!prices) return "";
+    const rows = Array.isArray(summary?.by?.model) ? summary.by.model : [];
+    const count = rows.filter((row) => row && typeof row === "object" && unpricedLabel(prices, row.value, tr)).length;
+    if (count) return count === 1 ? tr("unpricedModel") : tr("unpricedModels", count);
+    return Object.keys(prices).length ? "" : tr("noPrices");
+  }
+
   const harness = globalThis.__cpaUsageHarness;
   if (harness && typeof harness === "object") {
     Object.assign(harness, {
       compact, duration, usd, formatValue, parseTime, bucketRange, utcOffsetLabel, tickIndexes, linearScale, logScale,
       niceTicks, logTicks, linePath, areaPath, barPath, stack, densify, foldSeries, seriesId, hashKey, assignColors,
       slotStyle, csvCell, buildCSV, parseHash, buildHash, decodeAuth, managementBase, baseFromUrl, keyFromHeader,
-      sanitizeView, METRICS, SLOTS, MEMORY,
+      sanitizeView, translate, isPriced, unpricedLabel, costSub, METRICS, SLOTS, MEMORY,
     });
     return;
   }
@@ -439,64 +516,7 @@
   } catch { /* Without the hook the stored session is still tried. */ }
 
   const root = document.documentElement;
-  const STRINGS = {
-    en: {
-      nav: "Usage", range: "Time range", custom: "Custom", from: "From", to: "To", apply: "Apply", bucket: "Bucket",
-      hour: "Hourly", day: "Daily", refresh: "Refresh", auto: "Auto-refresh", filters: "Filters", clear: "Clear filters",
-      removeFilter: "Remove filter {0}", m_requests: "Requests", m_failures: "Failures", m_tokens: "Total tokens",
-      m_input: "Input tokens", m_output: "Output tokens", m_cache_read: "Cache read", m_cache_write: "Cache write",
-      m_reasoning: "Reasoning tokens", m_latency: "Avg latency", m_ttft: "Avg TTFT", m_cost: "Cost",
-      d_provider: "Provider", d_model: "Model", d_requested_model: "Requested model", d_account: "Account",
-      d_api_key: "API key", d_reasoning_effort: "Reasoning effort", d_service_tier: "Service tier", d_stream: "Stream",
-      metric: "Metric", groupBy: "Group by", thenBy: "then", none: "None", chart: "Chart", t_stacked: "Stacked bars",
-      t_grouped: "Grouped bars", t_lines: "Lines", t_area: "Stacked area", scale: "Scale", linear: "Linear", log: "Log",
-      top: "Top", table: "Table", csv: "Export CSV", noStack: "Averages can't be stacked",
-      legendHint: "Click to hide or show. Double-click to show only this.", total: "Total", overall: "Overall",
-      other: "Other", all: "All requests", empty: "(none)", noData: "No usage recorded in this range.",
-      localTime: "Local time ({0})", utcDays: "Days (UTC)", time: "Time", chartBy: "{0} by {1}", inOut: "Input / output",
-      failRate: "{0} of requests", cachedSub: "{0} cache read", reasoningSub: "{0} reasoning", maxSub: "Max {0}",
-      ttftSub: "{0} measured", cost: "Estimated cost", noPrices: "No prices set", breakdown: "Breakdown", prices: "Prices",
-      pricesHint: "USD per 1M tokens. Reasoning output uses the output price. A \"default\" row prices every other model.",
-      model: "Model", p_input: "Input", p_cache_read: "Cache read", p_cache_write: "Cache write", p_output: "Output",
-      addModel: "Add model", remove: "Remove", savePrices: "Save prices", saving: "Saving…", saved: "Prices saved.",
-      priceInvalid: "Prices must be numbers of 0 or more.", priceModel: "Every row needs a model name.",
-      priceDuplicate: "{0} is listed twice.",
-      disabled: "Usage tracking is off. Set observability.usage.tracker.enabled to true in config.yaml, then refresh.",
-      nokey: "Sign in to the panel first. This page uses the management key from your current session.",
-      unauthorized: "The server rejected the management key. Sign in again.", network: "Couldn't reach the server.",
-      http: "The request failed (HTTP {0}). {1}", retry: "Retry", loading: "Loading…", updated: "Updated {0}",
-      chartLabel: "{0}, {1} buckets. Arrow keys read values.",
-    },
-    "zh-CN": {
-      nav: "用量", range: "时间范围", custom: "自定义", from: "开始", to: "结束", apply: "应用", bucket: "时间粒度",
-      hour: "按小时", day: "按天", refresh: "刷新", auto: "自动刷新", filters: "筛选", clear: "清除筛选",
-      removeFilter: "移除筛选 {0}", m_requests: "请求数", m_failures: "失败数", m_tokens: "Token 总量",
-      m_input: "输入 Token", m_output: "输出 Token", m_cache_read: "缓存读取", m_cache_write: "缓存写入",
-      m_reasoning: "推理 Token", m_latency: "平均延迟", m_ttft: "平均首字延迟", m_cost: "费用",
-      d_provider: "提供商", d_model: "模型", d_requested_model: "请求模型", d_account: "账号",
-      d_api_key: "API 密钥", d_reasoning_effort: "推理强度", d_service_tier: "服务层级", d_stream: "流式",
-      metric: "指标", groupBy: "分组", thenBy: "再按", none: "无", chart: "图表", t_stacked: "堆叠柱状",
-      t_grouped: "分组柱状", t_lines: "折线", t_area: "堆叠面积", scale: "刻度", linear: "线性", log: "对数",
-      top: "前", table: "表格", csv: "导出 CSV", noStack: "平均值不能堆叠",
-      legendHint: "单击显示或隐藏，双击仅显示此项。", total: "合计", overall: "整体",
-      other: "其他", all: "全部请求", empty: "（空）", noData: "该时间范围内没有用量记录。",
-      localTime: "本地时间（{0}）", utcDays: "日期（UTC）", time: "时间", chartBy: "{0}（按{1}）", inOut: "输入 / 输出",
-      failRate: "占请求的 {0}", cachedSub: "缓存读取 {0}", reasoningSub: "推理 {0}", maxSub: "最大 {0}",
-      ttftSub: "已测量 {0}", cost: "预估费用", noPrices: "未设置价格", breakdown: "明细", prices: "价格",
-      pricesHint: "单位：美元 / 百万 Token。推理输出按输出价格计费。\"default\" 行用于其余所有模型。",
-      model: "模型", p_input: "输入", p_cache_read: "缓存读取", p_cache_write: "缓存写入", p_output: "输出",
-      addModel: "添加模型", remove: "删除", savePrices: "保存价格", saving: "保存中…", saved: "价格已保存。",
-      priceInvalid: "价格必须是大于或等于 0 的数字。", priceModel: "每一行都需要填写模型名称。",
-      priceDuplicate: "{0} 重复出现。",
-      disabled: "用量统计未启用。请在 config.yaml 中将 observability.usage.tracker.enabled 设为 true，然后刷新。",
-      nokey: "请先登录面板。此页面使用当前会话的管理密钥。",
-      unauthorized: "服务器拒绝了管理密钥，请重新登录。", network: "无法连接到服务器。",
-      http: "请求失败（HTTP {0}）。{1}", retry: "重试", loading: "加载中…", updated: "更新于 {0}",
-      chartLabel: "{0}，{1} 个时间段。方向键读取数值。",
-    },
-  };
-  const t = (key, ...args) => ((STRINGS[root.lang] || STRINGS.en)[key] ?? STRINGS.en[key] ?? key)
-    .replace(/\{(\d)\}/g, (_, i) => args[i] ?? "");
+  const t = (key, ...args) => translate(root.lang, key, ...args);
 
   const hidden = new Set();
   const formats = {};
@@ -617,7 +637,7 @@
       model, ...Object.fromEntries(PRICE_FIELDS.map((key) => [key, String(num(entry?.[key]))])),
     }));
     renderPrices();
-    if (ui && data) renderTiles();
+    if (ui && data) render();
   }
 
   const message = (failure) => (failure.kind === "http" ? t("http", failure.status, failure.detail) : t(failure.kind));
@@ -850,7 +870,7 @@
       tile(t("inOut"), `${compact(METRICS.input.get(p))} / ${compact(METRICS.output.get(p))}`, t("reasoningSub", compact(p.tokens.output_reasoning))),
       tile(t("m_latency"), duration(METRICS.latency.get(p)), p.requests && t("maxSub", duration(p.latency_ms_max))),
       tile(t("m_ttft"), duration(METRICS.ttft.get(p)), p.ttft_count && t("ttftSub", compact(p.ttft_count))),
-      tile(t("cost"), usd(p.cost_usd), prices && !Object.keys(prices).length && t("noPrices")));
+      tile(t("cost"), usd(p.cost_usd), costSub(prices, data.summary, t)));
   }
 
   function renderChart() {
@@ -860,9 +880,11 @@
       view.colors = memory;
       saveView();
     }
+    const costByModel = view.metric === "cost" && group.includes("model");
     for (const entry of list) {
       Object.assign(entry, slotStyle(entry.other ? -1 : slots.get(entry.id)));
       entry.label = seriesLabel(entry, group);
+      entry.note = costByModel && !entry.other ? unpricedLabel(prices, entry.key.model, t) : "";
       entry.values = entry.points.map(metric.get);
     }
     const model = { metric, list, type: effectiveType(metric), visible: list.filter((entry) => !hidden.has(entry.id)) };
@@ -874,7 +896,7 @@
   }
 
   function renderLegend({ list, type }) {
-    const signature = type + list.map((entry) => SEP + entry.id + entry.token + entry.label).join("");
+    const signature = type + list.map((entry) => SEP + entry.id + entry.token + entry.label + entry.note).join("");
     if (ui.legend.dataset.signature !== signature) {
       ui.legend.dataset.signature = signature;
       ui.legend.replaceChildren(...list.map((entry) => paint(el("button", {
@@ -890,7 +912,7 @@
           renderChart();
         },
       }, el("i", { class: [type === "lines" && "is-line", entry.pattern && `is-p${entry.pattern}`].filter(Boolean).join(" ") || null }),
-      el("span", { text: entry.label })), entry.color)));
+      el("span", { text: entry.label }), entry.note && el("small", { class: "cpa-u-unpriced", text: entry.note })), entry.color)));
     }
     ui.legend.hidden = list.length < 2 || view.table;
     for (const node of ui.legend.children) node.setAttribute("aria-pressed", String(!hidden.has(node.dataset.id)));
@@ -1109,8 +1131,10 @@
       el("thead", {}, el("tr", {}, [tab, ...columns.map(([key]) => key)].map((key, i) => el("th", { scope: "col", text: t(i ? `m_${key}` : `d_${key}`) })))),
       el("tbody", {}, rows.length ? rows.map((row) => {
         const point = normPoint(row.point), name = tab === "api_key" && row.hint ? row.hint : valueLabel(tab, row.value);
-        return el("tr", {}, el("th", { scope: "row", title: name, text: name }),
-          columns.map(([key, unit]) => el("td", { text: fullNumber(METRICS[key].get(point), unit) })));
+        return el("tr", {}, el("th", { scope: "row", title: name, text: name }), columns.map(([key, unit]) => {
+          const note = key === "cost" && tab === "model" && unpricedLabel(prices, row.value, t);
+          return el("td", { class: note ? "cpa-u-unpriced" : null, text: note || fullNumber(METRICS[key].get(point), unit) });
+        }));
       }) : el("tr", {}, el("td", { colspan: columns.length + 1, class: "cpa-u-empty", text: t("noData") })))));
   }
 

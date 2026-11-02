@@ -352,6 +352,40 @@ test("labels the UTC offset", () => {
   assert.equal(h.utcOffsetLabel(0), "UTC+00:00");
 });
 
+const en = (key, ...args) => h.translate("en", key, ...args);
+const zh = (key, ...args) => h.translate("zh-CN", key, ...args);
+const priceMap = { "claude-x": { input: 0, cache_read: 0, cache_write: 0, output: 0 }, "gpt-y": { input: 1, output: 4 } };
+
+test("a model is priced by an exact entry or a default entry", () => {
+  assert.equal(h.isPriced(priceMap, "claude-x"), true);
+  assert.equal(h.isPriced(priceMap, "gpt-y"), true);
+  assert.equal(h.isPriced(priceMap, "glm-z"), false);
+  assert.equal(h.isPriced(priceMap, "toString"), false);
+  assert.equal(h.isPriced({}, "claude-x"), false);
+  assert.equal(h.isPriced({ default: { input: 1 } }, "glm-z"), true);
+});
+
+test("breakdown cost cells mark unpriced models and claim nothing without a price map", () => {
+  const rows = [{ value: "claude-x", point: { cost_usd: 0 } }, { value: "glm-z", point: { cost_usd: 0 } }, { value: "", point: {} }];
+  const cell = (prices, row, tr = en) => h.unpricedLabel(prices, row.value, tr) || h.usd(row.point.cost_usd ?? 0);
+  assert.deepEqual(rows.map((row) => cell(priceMap, row)), ["$0.00", "unpriced", "unpriced"]);
+  assert.equal(cell(priceMap, rows[1], zh), "未定价");
+  assert.deepEqual(rows.map((row) => cell({ ...priceMap, default: {} }, row)), ["$0.00", "$0.00", "$0.00"]);
+  assert.deepEqual(rows.map((row) => cell(null, row)), ["$0.00", "$0.00", "$0.00"]);
+});
+
+test("the cost tile counts unpriced models in the summary", () => {
+  const summary = { by: { model: [{ value: "claude-x" }, { value: "glm-z" }, { value: "kimi-k" }, null] } };
+  assert.equal(h.costSub(priceMap, summary, en), "2 models unpriced");
+  assert.equal(h.costSub(priceMap, summary, zh), "2 个模型未定价");
+  assert.equal(h.costSub(priceMap, { by: { model: [{ value: "glm-z" }] } }, en), "1 model unpriced");
+  assert.equal(h.costSub(priceMap, { by: { model: [{ value: "gpt-y" }] } }, en), "");
+  assert.equal(h.costSub({ default: {} }, summary, en), "");
+  assert.equal(h.costSub({}, summary, en), "3 models unpriced");
+  assert.equal(h.costSub({}, {}, en), "No prices set");
+  assert.equal(h.costSub(null, summary, en), "");
+});
+
 test("restores a saved view and rejects unknown values", () => {
   const view = h.sanitizeView({ range: "7d", bucket: "day", metric: "cost", group: ["model", "account", "provider", "bogus"], type: "lines", scale: "log", top: 20, filters: { provider: ["claude", 3, "claude"], nope: ["x"] }, table: true, auto: true, tab: "api_key" });
   assert.deepEqual(plain(view), { range: "7d", from: 0, to: 0, bucket: "day", metric: "cost", group: ["model", "account"], type: "lines", scale: "log", top: 20, filters: { provider: ["claude"] }, table: true, auto: true, tab: "api_key", colors: [] });

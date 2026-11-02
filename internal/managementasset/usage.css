@@ -123,6 +123,7 @@ html[data-cpa-page] .sidebar .nav-item.active:not([data-cpa-owned]) { background
 .cpa-u-status { min-height: 18px; }
 .cpa-u-status.is-blocking { padding: 28px 24px; border: 1px solid var(--border-color); border-radius: 13px; background: var(--bg-primary); font-size: 14px; line-height: 1.5; }
 .cpa-u-muted { color: var(--text-tertiary); font-size: 12px; }
+.cpa-u-unpriced { flex: none; color: var(--text-tertiary); font-size: inherit; }
 .cpa-u-error { color: var(--error-color, #d03b3b); }
 
 .cpa-u-tiles {
