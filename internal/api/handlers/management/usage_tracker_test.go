@@ -16,7 +16,10 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/clienterror"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore"
+	log "github.com/sirupsen/logrus"
+	logtest "github.com/sirupsen/logrus/hooks/test"
 )
 
 type fakeBreakdownCall struct {
@@ -489,6 +492,41 @@ func TestUsageQueryRacingTrackerDisableReturns503(t *testing.T) {
 		rec := serveUsageTracker(t, h, http.MethodGet, target, "")
 		if rec.Code != http.StatusServiceUnavailable || strings.TrimSpace(rec.Body.String()) != `{"error":"usage tracker disabled"}` {
 			t.Fatalf("%s: status=%d body=%s", target, rec.Code, rec.Body.String())
+		}
+	}
+}
+
+func TestUsageQueryCanceledByClientIsNotAnError(t *testing.T) {
+	hook := logtest.NewGlobal()
+	t.Cleanup(hook.Reset)
+	for _, tc := range []struct {
+		name string
+		err  error
+	}{
+		{"canceled error", fmt.Errorf("usagestore: query usage: %w", context.Canceled)},
+		// The driver may surface an interrupt as its own error; the done request context decides.
+		{"driver interrupt", errors.New("interrupted (9)")},
+	} {
+		store := &fakeUsageStore{err: tc.err, values: map[usagestore.Dimension][]string{usagestore.DimAPIKey: {"hash-1"}}}
+		h, _ := newUsageTrackerHandler(store)
+		router := gin.New()
+		router.GET("/usage/series", h.GetUsageSeries)
+		router.GET("/usage/summary", h.GetUsageSummary)
+		router.GET("/usage/dimensions", h.GetUsageDimensions)
+		for _, target := range []string{"/usage/series", "/usage/summary", "/usage/dimensions"} {
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			req := httptest.NewRequest(http.MethodGet, target, nil).WithContext(ctx)
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, req)
+			if rec.Code != clienterror.StatusClientClosedRequest || rec.Body.Len() != 0 {
+				t.Fatalf("%s %s: status=%d body=%s", tc.name, target, rec.Code, rec.Body.String())
+			}
+		}
+	}
+	for _, entry := range hook.AllEntries() {
+		if entry.Level <= log.InfoLevel {
+			t.Fatalf("canceled query logged at %s: %s", entry.Level, entry.Message)
 		}
 	}
 }

@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/clienterror"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore"
 	log "github.com/sirupsen/logrus"
 )
@@ -242,6 +243,12 @@ func usageTrackerDisabled(c *gin.Context) {
 }
 
 func usageQueryFailed(c *gin.Context, query string, err error) {
+	// The panel aborts superseded loads and reloads; nobody reads the answer.
+	if errors.Is(err, context.Canceled) || c.Request.Context().Err() != nil {
+		log.WithError(err).WithField("query", query).Debug("management: usage tracker query canceled by the client")
+		c.AbortWithStatus(clienterror.StatusClientClosedRequest)
+		return
+	}
 	// A reload that disables the tracker closes the store under an in-flight query.
 	if errors.Is(err, usagestore.ErrClosed) {
 		usageTrackerDisabled(c)
