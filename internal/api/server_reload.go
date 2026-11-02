@@ -322,12 +322,28 @@ func (p *switchableUsagePlugin) setTarget(target usage.Plugin) {
 // could land in another deployment's directory.
 var errUsageTrackerNoAuthDir = errors.New("auth-dir is empty and sqlite-path is not set")
 
-// usageTrackerPath returns sqlite-path, or usage.sqlite in the resolved auth dir.
-// cfg.AuthDir already points at the local mirror when a remote token store is used.
-func usageTrackerPath(cfg *config.Config) (string, error) {
+// mirroredAuthDir returns the local auth mirror of a remote token store
+// (Postgres, object, or git store), or "" for the plain file store. It is the
+// same signal the watcher uses to lock auth-dir.
+func mirroredAuthDir() string {
+	if provider, ok := sdkAuth.GetTokenStore().(interface{ AuthDir() string }); ok {
+		return strings.TrimSpace(provider.AuthDir())
+	}
+	return ""
+}
+
+// usageTrackerPath returns sqlite-path, or the default database path. The
+// default is usage.sqlite in the resolved auth dir, except with a remote token
+// store, whose mirror root (<root>/auths, <root>/config) the store resets or
+// tracks in git; the database then goes to <parent of root>/usage/.
+func usageTrackerPath(cfg *config.Config, mirrorAuthDir string) (string, error) {
 	if path := strings.TrimSpace(cfg.UsageTracker.SQLitePath); path != "" {
 		// For a non-empty path ResolveAuthDir only expands a leading ~ and cleans it.
 		return util.ResolveAuthDir(path)
+	}
+	if mirrorAuthDir != "" {
+		root := filepath.Dir(filepath.Clean(mirrorAuthDir))
+		return filepath.Join(filepath.Dir(root), "usage", config.DefaultUsageTrackerFileName), nil
 	}
 	if cfg.AuthDir == "" {
 		return "", errUsageTrackerNoAuthDir
@@ -383,7 +399,7 @@ func (s *Server) syncUsageTracker(ctx context.Context, cfg *config.Config) {
 		t.failedPath, t.pathWarned = "", false
 		return
 	}
-	path, errPath := usageTrackerPath(cfg)
+	path, errPath := usageTrackerPath(cfg, mirroredAuthDir())
 	if errPath != nil {
 		if !t.pathWarned {
 			t.pathWarned = true

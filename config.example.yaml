@@ -1174,6 +1174,7 @@ observability:
     tracker:
       enabled: true
       # Database file. Empty uses <auth-dir>/usage.sqlite. Changing it requires a restart.
+      # With PGSTORE/OBJECTSTORE/GITSTORE, empty uses usage/usage.sqlite beside the store's local directory.
       sqlite-path: ""
       # Days to keep per-attempt rows and hourly rollups. 0 keeps them forever.
       raw-retention-days: 30

@@ -7,8 +7,8 @@ const (
 	DefaultUsageTrackerRawRetentionDays = 30
 	// DefaultUsageTrackerHourlyRetentionDays bounds hourly rollups by default.
 	DefaultUsageTrackerHourlyRetentionDays = 400
-	// DefaultUsageTrackerFileName is the database file created in the auth directory
-	// when SQLitePath is empty.
+	// DefaultUsageTrackerFileName is the database file created when SQLitePath is
+	// empty: in the auth directory, or in usage/ beside a remote store's mirror.
 	DefaultUsageTrackerFileName = "usage.sqlite"
 )
 
@@ -16,7 +16,8 @@ const (
 type UsageTrackerConfig struct {
 	// Enabled records every upstream attempt into the SQLite store.
 	Enabled bool `yaml:"enabled" json:"enabled"`
-	// SQLitePath is the database file; empty uses <auth-dir>/usage.sqlite.
+	// SQLitePath is the database file; empty uses <auth-dir>/usage.sqlite, or
+	// usage/usage.sqlite beside the local mirror of a remote token store.
 	SQLitePath string `yaml:"sqlite-path" json:"sqlite-path"`
 	// RawRetentionDays bounds per-attempt rows; 0 keeps them forever.
 	RawRetentionDays int `yaml:"raw-retention-days" json:"raw-retention-days"`

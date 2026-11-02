@@ -11,7 +11,10 @@ import (
 	"time"
 
 	proxyconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/store"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore"
+	sdkAuth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
+	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/usage"
 	log "github.com/sirupsen/logrus"
 	logtest "github.com/sirupsen/logrus/hooks/test"
@@ -232,24 +235,88 @@ func TestUsageTrackerPath(t *testing.T) {
 		t.Skip(errHome)
 	}
 	for _, tc := range []struct {
-		name, authDir, sqlitePath, want string
+		name, authDir, mirror, sqlitePath, want string
 	}{
-		{"auth dir default", "/srv/auths", "", filepath.Join("/srv/auths", "usage.sqlite")},
-		{"tilde auth dir", "~/auths", "", filepath.Join(home, "auths", "usage.sqlite")},
-		{"explicit path", "/srv/auths", " /data/u.sqlite ", "/data/u.sqlite"},
-		{"tilde path", "/srv/auths", "~/u.sqlite", filepath.Join(home, "u.sqlite")},
+		{"auth dir default", "/srv/auths", "", "", filepath.Join("/srv/auths", "usage.sqlite")},
+		{"tilde auth dir", "~/auths", "", "", filepath.Join(home, "auths", "usage.sqlite")},
+		{"explicit path", "/srv/auths", "", " /data/u.sqlite ", "/data/u.sqlite"},
+		{"tilde path", "/srv/auths", "", "~/u.sqlite", filepath.Join(home, "u.sqlite")},
+		{"postgres mirror", "/work/pgstore/auths", "/work/pgstore/auths", "", "/work/usage/usage.sqlite"},
+		{"object mirror", "/data/objectstore/auths", "/data/objectstore/auths", "", "/data/usage/usage.sqlite"},
+		{"git mirror", "/data/gitstore/auths", "/data/gitstore/auths", "", "/data/usage/usage.sqlite"},
+		{"mirror explicit path", "/data/gitstore/auths", "/data/gitstore/auths", "/data/gitstore/auths/u.sqlite", "/data/gitstore/auths/u.sqlite"},
+		{"mirror without auth dir", "", "/data/gitstore/auths", "", "/data/usage/usage.sqlite"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := &proxyconfig.Config{UsageTracker: proxyconfig.UsageTrackerConfig{SQLitePath: tc.sqlitePath}}
 			cfg.AuthDir = tc.authDir
-			got, errPath := usageTrackerPath(cfg)
+			got, errPath := usageTrackerPath(cfg, tc.mirror)
 			if errPath != nil || got != filepath.Clean(tc.want) {
 				t.Fatalf("usageTrackerPath() = %q, %v; want %q", got, errPath, tc.want)
 			}
 		})
 	}
-	if got, errPath := usageTrackerPath(&proxyconfig.Config{}); !errors.Is(errPath, errUsageTrackerNoAuthDir) {
+	if got, errPath := usageTrackerPath(&proxyconfig.Config{}, ""); !errors.Is(errPath, errUsageTrackerNoAuthDir) {
 		t.Fatalf("usageTrackerPath() with empty auth-dir = %q, %v; want errUsageTrackerNoAuthDir", got, errPath)
+	}
+}
+
+// fakeMirrorStore mimics PostgresStore, which needs a live database to construct.
+type fakeMirrorStore struct {
+	coreauth.Store
+	authDir string
+}
+
+func (s fakeMirrorStore) AuthDir() string { return s.authDir }
+
+// TestUsageTrackerDefaultPathOutsideRemoteStore guards the remote store modes:
+// the Postgres store wipes <root>/auths on start and the git store owns <root>
+// as its worktree, so the default database must stay outside <root>.
+func TestUsageTrackerDefaultPathOutsideRemoteStore(t *testing.T) {
+	previous := sdkAuth.GetTokenStore()
+	t.Cleanup(func() { sdkAuth.RegisterTokenStore(previous) })
+
+	base := t.TempDir()
+	gitStore := store.NewGitTokenStore("", "", "", "")
+	gitStore.SetBaseDir(filepath.Join(base, "gitstore", "auths"))
+	objectStore, errObject := store.NewObjectTokenStore(store.ObjectStoreConfig{
+		Endpoint:  "127.0.0.1:9",
+		Bucket:    "b",
+		AccessKey: "a",
+		SecretKey: "s",
+		LocalRoot: filepath.Join(base, "objectstore"),
+	})
+	if errObject != nil {
+		t.Fatal(errObject)
+	}
+	modes := []struct {
+		name  string
+		store coreauth.Store
+		root  string
+	}{
+		{"file", sdkAuth.NewFileTokenStore(), ""},
+		{"postgres", fakeMirrorStore{authDir: filepath.Join(base, "pgstore", "auths")}, filepath.Join(base, "pgstore")},
+		{"object", objectStore, filepath.Join(base, "objectstore")},
+		{"git", gitStore, filepath.Join(base, "gitstore")},
+	}
+	for _, mode := range modes {
+		t.Run(mode.name, func(t *testing.T) {
+			sdkAuth.RegisterTokenStore(mode.store)
+			cfg := &proxyconfig.Config{}
+			cfg.AuthDir = filepath.Join(base, "auths")
+			want := filepath.Join(base, "auths", "usage.sqlite")
+			if mode.root != "" {
+				cfg.AuthDir = filepath.Join(mode.root, "auths")
+				want = filepath.Join(base, "usage", "usage.sqlite")
+			}
+			got, errPath := usageTrackerPath(cfg, mirroredAuthDir())
+			if errPath != nil || got != want {
+				t.Fatalf("usageTrackerPath() = %q, %v; want %q", got, errPath, want)
+			}
+			if mode.root != "" && strings.HasPrefix(got, mode.root+string(filepath.Separator)) {
+				t.Fatalf("database %q lands inside the %s store root %q", got, mode.name, mode.root)
+			}
+		})
 	}
 }
 
