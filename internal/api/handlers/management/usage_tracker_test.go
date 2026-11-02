@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -64,18 +65,36 @@ func (f *fakeUsageStore) calls() int {
 	return len(f.seriesCalls) + len(f.breakdownCalls) + len(f.valueCalls)
 }
 
-// withUsageTracker installs store (nil means disabled) and an isolated in-memory
-// price source, restoring the defaults after the test.
-func withUsageTracker(t *testing.T, store usageSeriesStore) *memoryPricesStore {
-	t.Helper()
-	prices := newMemoryPricesStore()
-	setUsageSeriesStore(store)
-	SetUsageTrackerPrices(prices)
-	t.Cleanup(func() {
-		setUsageSeriesStore(nil)
-		SetUsageTrackerPrices(nil)
-	})
-	return prices
+type fakePricesStore struct {
+	mu      sync.Mutex
+	prices  usagestore.Prices
+	failPut error
+}
+
+func (f *fakePricesStore) Get() usagestore.Prices {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return maps.Clone(f.prices)
+}
+
+func (f *fakePricesStore) Put(prices usagestore.Prices) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.failPut != nil {
+		return f.failPut
+	}
+	f.prices = maps.Clone(prices)
+	return nil
+}
+
+// newUsageTrackerHandler returns a Handler serving store (nil means disabled)
+// with its own in-memory price source.
+func newUsageTrackerHandler(store usageSeriesStore) (*Handler, *fakePricesStore) {
+	h := &Handler{}
+	prices := &fakePricesStore{}
+	h.setUsageSeriesStore(store)
+	h.setUsagePrices(prices)
+	return h, prices
 }
 
 func withUsageTrackerNow(t *testing.T, now time.Time) {
@@ -85,9 +104,8 @@ func withUsageTrackerNow(t *testing.T, now time.Time) {
 	t.Cleanup(func() { usageTrackerNow = previous })
 }
 
-func serveUsageTracker(t *testing.T, method, target, body string) *httptest.ResponseRecorder {
+func serveUsageTracker(t *testing.T, h *Handler, method, target, body string) *httptest.ResponseRecorder {
 	t.Helper()
-	h := &Handler{}
 	router := gin.New()
 	router.GET("/usage/series", h.GetUsageSeries)
 	router.GET("/usage/summary", h.GetUsageSummary)
@@ -167,7 +185,7 @@ func TestUsageSeriesReturnsContractShape(t *testing.T) {
 		},
 		Total: usageTestPoint(14, 31, 90, 0.25),
 	}}
-	prices := withUsageTracker(t, store)
+	h, prices := newUsageTrackerHandler(store)
 	stored := usagestore.Prices{"claude-opus-5-5": {Input: 15, Output: 75}}
 	if errPut := prices.Put(stored); errPut != nil {
 		t.Fatal(errPut)
@@ -175,7 +193,7 @@ func TestUsageSeriesReturnsContractShape(t *testing.T) {
 
 	target := "/usage/series?from=2026-11-01T01:00:00%2B01:00&to=1793577600&bucket=hour&group=provider,%20model,provider" +
 		"&filter.provider=claude,gemini&filter.provider=codex&filter.api_key=abc&limit=5&unknown=1"
-	rec := serveUsageTracker(t, http.MethodGet, target, "")
+	rec := serveUsageTracker(t, h, http.MethodGet, target, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -237,9 +255,9 @@ func TestUsageSeriesDefaultsAndEmptyResult(t *testing.T) {
 	now := time.Date(2026, 11, 2, 15, 4, 5, 999, time.UTC)
 	withUsageTrackerNow(t, now)
 	store := &fakeUsageStore{series: usagestore.SeriesResult{Series: []usagestore.Series{{}}}}
-	withUsageTracker(t, store)
+	h, _ := newUsageTrackerHandler(store)
 
-	rec := serveUsageTracker(t, http.MethodGet, "/usage/series", "")
+	rec := serveUsageTracker(t, h, http.MethodGet, "/usage/series", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -260,7 +278,7 @@ func TestUsageSeriesDefaultsAndEmptyResult(t *testing.T) {
 		t.Fatalf("default range = %s..%s", q.From, q.To)
 	}
 
-	rec = serveUsageTracker(t, http.MethodGet, "/usage/series?to=2026-11-01T00:00:00Z&bucket=DAY", "")
+	rec = serveUsageTracker(t, h, http.MethodGet, "/usage/series?to=2026-11-01T00:00:00Z&bucket=DAY", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -272,11 +290,11 @@ func TestUsageSeriesDefaultsAndEmptyResult(t *testing.T) {
 
 func TestUsageSeriesClampsLimitAndAllowsMaxRange(t *testing.T) {
 	store := &fakeUsageStore{}
-	withUsageTracker(t, store)
+	h, _ := newUsageTrackerHandler(store)
 	from := time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
 	to := from.Add(400 * 24 * time.Hour)
 	target := fmt.Sprintf("/usage/series?from=%d&to=%d&limit=1000", from.Unix(), to.Unix())
-	rec := serveUsageTracker(t, http.MethodGet, target, "")
+	rec := serveUsageTracker(t, h, http.MethodGet, target, "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -287,7 +305,7 @@ func TestUsageSeriesClampsLimitAndAllowsMaxRange(t *testing.T) {
 
 func TestUsageQueriesRejectInvalidParameters(t *testing.T) {
 	store := &fakeUsageStore{}
-	withUsageTracker(t, store)
+	h, _ := newUsageTrackerHandler(store)
 	for _, tc := range []struct{ name, target, message string }{
 		{"bad from", "/usage/series?from=yesterday", "from must be RFC3339 or unix seconds"},
 		{"bad to", "/usage/series?to=2026-13-01T00:00:00Z", "to must be RFC3339 or unix seconds"},
@@ -305,7 +323,7 @@ func TestUsageQueriesRejectInvalidParameters(t *testing.T) {
 		{"dimensions bad time", "/usage/dimensions?from=nope", "from must be RFC3339 or unix seconds"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			rec := serveUsageTracker(t, http.MethodGet, tc.target, "")
+			rec := serveUsageTracker(t, h, http.MethodGet, tc.target, "")
 			if rec.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 			}
@@ -330,12 +348,12 @@ func TestUsageSummaryReturnsBreakdowns(t *testing.T) {
 		usagestore.DimModel:  models,
 		usagestore.DimAPIKey: {{Value: "hash-1", Hint: "sk-a…b2c3", Point: usageTestPoint(12, 500, 300, 1.75)}},
 	}}
-	prices := withUsageTracker(t, store)
+	h, prices := newUsageTrackerHandler(store)
 	if errPut := prices.Put(usagestore.Prices{"default": {Input: 1}}); errPut != nil {
 		t.Fatal(errPut)
 	}
 
-	rec := serveUsageTracker(t, http.MethodGet, "/usage/summary?from=1793491200&to=1793577600&filter.provider=claude,gemini&group=ignored", "")
+	rec := serveUsageTracker(t, h, http.MethodGet, "/usage/summary?from=1793491200&to=1793577600&filter.provider=claude,gemini&group=ignored", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -394,9 +412,9 @@ func TestUsageDimensionsReturnsValuesAndHints(t *testing.T) {
 			usagestore.DimAPIKey: {{Value: "hash-1", Hint: "sk-a…b2c3"}},
 		},
 	}
-	withUsageTracker(t, store)
+	h, _ := newUsageTrackerHandler(store)
 
-	rec := serveUsageTracker(t, http.MethodGet, "/usage/dimensions?from=2026-11-01T00:00:00Z&to=2026-11-02T00:00:00Z", "")
+	rec := serveUsageTracker(t, h, http.MethodGet, "/usage/dimensions?from=2026-11-01T00:00:00Z&to=2026-11-02T00:00:00Z", "")
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 	}
@@ -411,8 +429,8 @@ func TestUsageDimensionsReturnsValuesAndHints(t *testing.T) {
 }
 
 func TestUsageEndpointsReturn503WhenDisabled(t *testing.T) {
-	withUsageTracker(t, &fakeUsageStore{})
-	SetUsageTrackerStore(nil)
+	h, _ := newUsageTrackerHandler(&fakeUsageStore{})
+	h.SetUsageStore(nil)
 	for _, tc := range []struct{ method, target, body string }{
 		{http.MethodGet, "/usage/series", ""},
 		{http.MethodGet, "/usage/summary", ""},
@@ -420,7 +438,7 @@ func TestUsageEndpointsReturn503WhenDisabled(t *testing.T) {
 		{http.MethodGet, "/usage/prices", ""},
 		{http.MethodPut, "/usage/prices", `{"prices":{}}`},
 	} {
-		rec := serveUsageTracker(t, tc.method, tc.target, tc.body)
+		rec := serveUsageTracker(t, h, tc.method, tc.target, tc.body)
 		if rec.Code != http.StatusServiceUnavailable || strings.TrimSpace(rec.Body.String()) != `{"error":"usage tracker disabled"}` {
 			t.Fatalf("%s %s: status=%d body=%s", tc.method, tc.target, rec.Code, rec.Body.String())
 		}
@@ -432,58 +450,48 @@ func TestUsageStoreErrorsReturnGeneric500(t *testing.T) {
 		err:    errors.New("SELECT api_key_hash FROM usage_events: database is locked"),
 		values: map[usagestore.Dimension][]string{usagestore.DimAPIKey: {"hash-1"}},
 	}
-	withUsageTracker(t, store)
+	h, _ := newUsageTrackerHandler(store)
 	for _, target := range []string{"/usage/series", "/usage/summary", "/usage/dimensions"} {
-		rec := serveUsageTracker(t, http.MethodGet, target, "")
+		rec := serveUsageTracker(t, h, http.MethodGet, target, "")
 		if rec.Code != http.StatusInternalServerError || strings.TrimSpace(rec.Body.String()) != `{"error":"usage query failed"}` {
 			t.Fatalf("%s: status=%d body=%s", target, rec.Code, rec.Body.String())
 		}
 	}
 }
 
-type failingPricesStore struct{ memoryPricesStore }
-
-func (*failingPricesStore) Put(usagestore.Prices) error { return errors.New("disk full") }
-
-func TestUsagePricesDefaultSourceIsInMemory(t *testing.T) {
+func TestUsagePricesRoundTrip(t *testing.T) {
 	store := &fakeUsageStore{}
-	withUsageTracker(t, store)
-	SetUsageTrackerPrices(nil)
-	t.Cleanup(func() { _ = defaultUsageTrackerPrices.Put(nil) })
+	h, _ := newUsageTrackerHandler(store)
 
-	if rec := serveUsageTracker(t, http.MethodGet, "/usage/prices", ""); rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != `{"prices":{}}` {
+	if rec := serveUsageTracker(t, h, http.MethodGet, "/usage/prices", ""); rec.Code != http.StatusOK || strings.TrimSpace(rec.Body.String()) != `{"prices":{}}` {
 		t.Fatalf("initial GET: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 
 	put := `{"prices":{" claude-opus-5-5 ":{"input":15,"cache_read":1.5,"cache_write":18.75,"output":75},"default":{"input":1}}}`
 	want := `{"prices":{"claude-opus-5-5":{"input":15,"cache_read":1.5,"cache_write":18.75,"output":75},` +
 		`"default":{"input":1,"cache_read":0,"cache_write":0,"output":0}}}`
-	rec := serveUsageTracker(t, http.MethodPut, "/usage/prices", put)
+	rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", put)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("PUT: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 	assertJSONEqual(t, "PUT response", decodeUsageJSON(t, rec), want)
-	assertJSONEqual(t, "GET after PUT", decodeUsageJSON(t, serveUsageTracker(t, http.MethodGet, "/usage/prices", "")), want)
+	assertJSONEqual(t, "GET after PUT", decodeUsageJSON(t, serveUsageTracker(t, h, http.MethodGet, "/usage/prices", "")), want)
 
-	// The default source hands out copies, so callers cannot mutate stored prices.
-	defaultUsageTrackerPrices.Get()["claude-opus-5-5"] = usagestore.ModelPrice{}
-	assertJSONEqual(t, "GET after caller mutation", decodeUsageJSON(t, serveUsageTracker(t, http.MethodGet, "/usage/prices", "")), want)
-
-	if rec := serveUsageTracker(t, http.MethodGet, "/usage/series", ""); rec.Code != http.StatusOK {
+	if rec := serveUsageTracker(t, h, http.MethodGet, "/usage/series", ""); rec.Code != http.StatusOK {
 		t.Fatalf("series: status=%d body=%s", rec.Code, rec.Body.String())
 	}
 	if got := store.seriesPrices[0]["claude-opus-5-5"]; got != (usagestore.ModelPrice{Input: 15, CacheRead: 1.5, CacheWrite: 18.75, Output: 75}) {
 		t.Fatalf("series prices = %+v", store.seriesPrices[0])
 	}
 
-	rec = serveUsageTracker(t, http.MethodPut, "/usage/prices", `{"prices":{"gpt-6":{"output":2}}}`)
+	rec = serveUsageTracker(t, h, http.MethodPut, "/usage/prices", `{"prices":{"gpt-6":{"output":2}}}`)
 	assertJSONEqual(t, "replacing PUT", decodeUsageJSON(t, rec), `{"prices":{"gpt-6":{"input":0,"cache_read":0,"cache_write":0,"output":2}}}`)
-	rec = serveUsageTracker(t, http.MethodPut, "/usage/prices", `{"prices":{}}`)
+	rec = serveUsageTracker(t, h, http.MethodPut, "/usage/prices", `{"prices":{}}`)
 	assertJSONEqual(t, "clearing PUT", decodeUsageJSON(t, rec), `{"prices":{}}`)
 }
 
 func TestPutUsagePricesRejectsInvalidBodies(t *testing.T) {
-	prices := withUsageTracker(t, &fakeUsageStore{})
+	h, prices := newUsageTrackerHandler(&fakeUsageStore{})
 	seed := usagestore.Prices{"seed": {Input: 1}}
 	if errPut := prices.Put(seed); errPut != nil {
 		t.Fatal(errPut)
@@ -516,7 +524,7 @@ func TestPutUsagePricesRejectsInvalidBodies(t *testing.T) {
 		{"too many entries", string(tooManyBody), "prices must not exceed 500 entries"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			rec := serveUsageTracker(t, http.MethodPut, "/usage/prices", tc.body)
+			rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", tc.body)
 			if rec.Code != http.StatusBadRequest {
 				t.Fatalf("status = %d body=%s", rec.Code, rec.Body.String())
 			}
@@ -532,7 +540,7 @@ func TestPutUsagePricesRejectsInvalidBodies(t *testing.T) {
 		})
 	}
 	oversized := `{"prices":{"` + strings.Repeat("m", usageTrackerMaxPriceBody) + `":{}}}`
-	if rec := serveUsageTracker(t, http.MethodPut, "/usage/prices", oversized); rec.Code != http.StatusRequestEntityTooLarge {
+	if rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", oversized); rec.Code != http.StatusRequestEntityTooLarge {
 		t.Fatalf("oversized body: status=%d body=%.200s", rec.Code, rec.Body.String())
 	}
 	if got := prices.Get(); !reflect.DeepEqual(got, seed) {
@@ -544,7 +552,7 @@ func TestPutUsagePricesRejectsInvalidBodies(t *testing.T) {
 	if errMarshal != nil {
 		t.Fatal(errMarshal)
 	}
-	if rec := serveUsageTracker(t, http.MethodPut, "/usage/prices", string(maxBody)); rec.Code != http.StatusOK {
+	if rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", string(maxBody)); rec.Code != http.StatusOK {
 		t.Fatalf("%d entries: status=%d body=%.200s", usageTrackerMaxPrices, rec.Code, rec.Body.String())
 	}
 	if got := len(prices.Get()); got != usageTrackerMaxPrices {
@@ -553,9 +561,9 @@ func TestPutUsagePricesRejectsInvalidBodies(t *testing.T) {
 }
 
 func TestPutUsagePricesReportsSaveFailure(t *testing.T) {
-	withUsageTracker(t, &fakeUsageStore{})
-	SetUsageTrackerPrices(&failingPricesStore{})
-	rec := serveUsageTracker(t, http.MethodPut, "/usage/prices", `{"prices":{"m":{"input":1}}}`)
+	h, prices := newUsageTrackerHandler(&fakeUsageStore{})
+	prices.failPut = errors.New("disk full")
+	rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", `{"prices":{"m":{"input":1}}}`)
 	if rec.Code != http.StatusInternalServerError || strings.TrimSpace(rec.Body.String()) != `{"error":"failed to save prices"}` {
 		t.Fatalf("status=%d body=%s", rec.Code, rec.Body.String())
 	}

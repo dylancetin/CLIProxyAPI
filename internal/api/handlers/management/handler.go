@@ -62,7 +62,8 @@ type Handler struct {
 	pluginStoreHTTPClient   pluginstore.HTTPDoer
 	pluginStoreRateLimiter  *pluginstore.GitHubRateLimiter
 	pluginReleases          pluginReleaseCache
-	usageStore              *usagestore.Store
+	usageStore              usageSeriesStore
+	usagePrices             pricesStore
 }
 
 type configReloadSnapshot struct {
@@ -84,8 +85,8 @@ func NewHandler(cfg *config.Config, configFilePath string, manager *coreauth.Man
 		allowRemoteOverride: envSecret != "",
 		envSecret:           envSecret,
 	}
+	h.usagePrices = configUsagePrices{h: h}
 	h.startAttemptCleanup()
-	SetUsageTrackerPrices(configUsagePrices{h: h})
 	return h
 }
 
@@ -169,24 +170,46 @@ func (h *Handler) SetAuthManager(manager *coreauth.Manager) {
 
 // SetUsageStore updates the usage tracker store; nil means the tracker is disabled.
 func (h *Handler) SetUsageStore(store *usagestore.Store) {
+	if store == nil {
+		// A nil *Store in the interface would read as an enabled tracker.
+		h.setUsageSeriesStore(nil)
+		return
+	}
+	h.setUsageSeriesStore(store)
+}
+
+func (h *Handler) setUsageSeriesStore(store usageSeriesStore) {
 	if h == nil {
 		return
 	}
 	h.mu.Lock()
 	h.usageStore = store
 	h.mu.Unlock()
-	SetUsageTrackerStore(store)
 }
 
 // UsageStore returns the current usage tracker store, or nil when the tracker is
 // disabled. Callers must not hold h.mu.
 func (h *Handler) UsageStore() *usagestore.Store {
+	store, _ := h.usageTrackerState()
+	sqliteStore, _ := store.(*usagestore.Store)
+	return sqliteStore
+}
+
+func (h *Handler) setUsagePrices(prices pricesStore) {
+	h.mu.Lock()
+	h.usagePrices = prices
+	h.mu.Unlock()
+}
+
+// usageTrackerState returns the store and price source the usage endpoints use.
+// Callers must not hold h.mu.
+func (h *Handler) usageTrackerState() (usageSeriesStore, pricesStore) {
 	if h == nil {
-		return nil
+		return nil, nil
 	}
 	h.mu.Lock()
 	defer h.mu.Unlock()
-	return h.usageStore
+	return h.usageStore, h.usagePrices
 }
 
 // SetPluginHost updates the plugin host used by plugin-backed management endpoints.

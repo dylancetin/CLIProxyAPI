@@ -13,8 +13,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -53,89 +51,10 @@ type usageSeriesStore interface {
 	QueryDimensionValues(ctx context.Context, from, to time.Time) (map[usagestore.Dimension][]string, error)
 }
 
-// Holders let one atomic.Pointer carry differing concrete types; atomic.Value
-// panics when the stored concrete type changes.
-type usageStoreHolder struct{ store usageSeriesStore }
-
-type usagePricesHolder struct{ store pricesStore }
-
-var (
-	usageTrackerStore  atomic.Pointer[usageStoreHolder]
-	usageTrackerPrices atomic.Pointer[usagePricesHolder]
-)
-
-// SetUsageTrackerStore publishes the store queried by the usage tracker
-// endpoints. nil disables them with 503.
-func SetUsageTrackerStore(store *usagestore.Store) {
-	if store == nil {
-		setUsageSeriesStore(nil)
-		return
-	}
-	setUsageSeriesStore(store)
-}
-
-func setUsageSeriesStore(store usageSeriesStore) {
-	if store == nil {
-		usageTrackerStore.Store(nil)
-		return
-	}
-	usageTrackerStore.Store(&usageStoreHolder{store: store})
-}
-
-func currentUsageStore() usageSeriesStore {
-	if holder := usageTrackerStore.Load(); holder != nil {
-		return holder.store
-	}
-	return nil
-}
-
 // pricesStore is the source of model prices for usage queries and the prices endpoints.
 type pricesStore interface {
 	Get() usagestore.Prices
 	Put(usagestore.Prices) error
-}
-
-// memoryPricesStore keeps prices in process memory only; they are lost on restart.
-type memoryPricesStore struct {
-	mu     sync.RWMutex
-	prices usagestore.Prices
-}
-
-func newMemoryPricesStore() *memoryPricesStore {
-	return &memoryPricesStore{}
-}
-
-func (m *memoryPricesStore) Get() usagestore.Prices {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	return maps.Clone(m.prices)
-}
-
-func (m *memoryPricesStore) Put(prices usagestore.Prices) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.prices = maps.Clone(prices)
-	return nil
-}
-
-// defaultUsageTrackerPrices serves until a persistent source is installed.
-var defaultUsageTrackerPrices = newMemoryPricesStore()
-
-// SetUsageTrackerPrices replaces the price source used by usage queries and
-// the prices endpoints. nil restores the in-memory default.
-func SetUsageTrackerPrices(store pricesStore) {
-	if store == nil {
-		usageTrackerPrices.Store(nil)
-		return
-	}
-	usageTrackerPrices.Store(&usagePricesHolder{store: store})
-}
-
-func currentUsagePrices() pricesStore {
-	if holder := usageTrackerPrices.Load(); holder != nil {
-		return holder.store
-	}
-	return defaultUsageTrackerPrices
 }
 
 type usageTokensJSON struct {
@@ -194,7 +113,7 @@ type usageAPIKeyValueJSON struct {
 
 // GetUsageSeries returns bucketed usage series.
 func (h *Handler) GetUsageSeries(c *gin.Context) {
-	store, ok := requireUsageStore(c)
+	store, prices, ok := h.requireUsageTracker(c)
 	if !ok {
 		return
 	}
@@ -203,7 +122,7 @@ func (h *Handler) GetUsageSeries(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errQuery.Error()})
 		return
 	}
-	result, errSeries := store.QuerySeries(c.Request.Context(), q, currentUsagePrices().Get())
+	result, errSeries := store.QuerySeries(c.Request.Context(), q, prices.Get())
 	if errSeries != nil {
 		usageQueryFailed(c, "series", errSeries)
 		return
@@ -213,7 +132,7 @@ func (h *Handler) GetUsageSeries(c *gin.Context) {
 
 // GetUsageSummary returns the range total and per-dimension breakdowns.
 func (h *Handler) GetUsageSummary(c *gin.Context) {
-	store, ok := requireUsageStore(c)
+	store, source, ok := h.requireUsageTracker(c)
 	if !ok {
 		return
 	}
@@ -227,7 +146,7 @@ func (h *Handler) GetUsageSummary(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": errFilters.Error()})
 		return
 	}
-	prices := currentUsagePrices().Get()
+	prices := source.Get()
 	var total usagestore.Point
 	by := make(map[usagestore.Dimension][]usageBreakdownRowJSON, len(usageTrackerDimensions))
 	for _, dim := range usageTrackerDimensions {
@@ -262,7 +181,7 @@ func (h *Handler) GetUsageSummary(c *gin.Context) {
 
 // GetUsageDimensions returns distinct values per dimension for filter pickers.
 func (h *Handler) GetUsageDimensions(c *gin.Context) {
-	store, ok := requireUsageStore(c)
+	store, _, ok := h.requireUsageTracker(c)
 	if !ok {
 		return
 	}
@@ -307,13 +226,15 @@ func (h *Handler) GetUsageDimensions(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-func requireUsageStore(c *gin.Context) (usageSeriesStore, bool) {
-	store := currentUsageStore()
+// requireUsageTracker returns the store and price source, or answers 503 when
+// the tracker is disabled.
+func (h *Handler) requireUsageTracker(c *gin.Context) (usageSeriesStore, pricesStore, bool) {
+	store, prices := h.usageTrackerState()
 	if store == nil {
 		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "usage tracker disabled"})
-		return nil, false
+		return nil, nil, false
 	}
-	return store, true
+	return store, prices, true
 }
 
 func usageQueryFailed(c *gin.Context, query string, err error) {
@@ -543,15 +464,17 @@ type usagePricesRequest struct {
 
 // GetUsagePrices returns the model prices used for cost_usd.
 func (h *Handler) GetUsagePrices(c *gin.Context) {
-	if _, ok := requireUsageStore(c); !ok {
+	_, source, ok := h.requireUsageTracker(c)
+	if !ok {
 		return
 	}
-	c.JSON(http.StatusOK, usagePricesResponse{Prices: nonNilUsagePrices(currentUsagePrices().Get())})
+	c.JSON(http.StatusOK, usagePricesResponse{Prices: nonNilUsagePrices(source.Get())})
 }
 
 // PutUsagePrices replaces the whole price map and returns the stored map.
 func (h *Handler) PutUsagePrices(c *gin.Context) {
-	if _, ok := requireUsageStore(c); !ok {
+	_, source, ok := h.requireUsageTracker(c)
+	if !ok {
 		return
 	}
 	prices, errDecode := decodeUsagePrices(c)
@@ -563,7 +486,6 @@ func (h *Handler) PutUsagePrices(c *gin.Context) {
 		c.JSON(status, gin.H{"error": errDecode.Error()})
 		return
 	}
-	source := currentUsagePrices()
 	if errPut := source.Put(prices); errPut != nil {
 		log.WithError(errPut).Error("management: failed to save usage tracker prices")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save prices"})
