@@ -186,3 +186,63 @@ func TestCloneForRuntimeCopiesUsageTrackerPrices(t *testing.T) {
 		t.Fatal("clone lost tracker enabled flag")
 	}
 }
+
+func TestUsageTrackerSaveRemovesPrices(t *testing.T) {
+	raw := `config-version: 8
+server:
+  port: 8317
+observability:
+  usage:
+    tracker:
+      prices:
+        a:
+          input: 1
+          output: 2
+        b:
+          input: 3
+          output: 4
+`
+	for name, tc := range map[string]struct {
+		prices map[string]pricing.ModelPrice
+		want   map[string]pricing.ModelPrice
+	}{
+		"remove one model": {
+			prices: map[string]pricing.ModelPrice{"a": {Input: 1, Output: 2}},
+			want:   map[string]pricing.ModelPrice{"a": {Input: 1, Output: 2}},
+		},
+		"empty map": {prices: map[string]pricing.ModelPrice{}},
+		"nil map":   {prices: nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "config.yaml")
+			if errWrite := os.WriteFile(path, []byte(raw), 0o600); errWrite != nil {
+				t.Fatal(errWrite)
+			}
+			cfg, errLoad := LoadConfig(path)
+			if errLoad != nil {
+				t.Fatal(errLoad)
+			}
+			if len(cfg.UsageTracker.Prices) != 2 {
+				t.Fatalf("seed prices = %+v", cfg.UsageTracker.Prices)
+			}
+			cfg.UsageTracker.Prices = tc.prices
+			if errSave := SaveConfigPreserveComments(path, cfg, true); errSave != nil {
+				t.Fatal(errSave)
+			}
+			saved, errRead := os.ReadFile(path)
+			if errRead != nil {
+				t.Fatal(errRead)
+			}
+			reloaded, errReload := LoadConfig(path)
+			if errReload != nil {
+				t.Fatal(errReload)
+			}
+			if len(reloaded.UsageTracker.Prices) != len(tc.want) || (len(tc.want) > 0 && !reflect.DeepEqual(reloaded.UsageTracker.Prices, tc.want)) {
+				t.Fatalf("reloaded prices = %+v, want %+v\n%s", reloaded.UsageTracker.Prices, tc.want, saved)
+			}
+			if errValidate := ValidateV8Config(saved); errValidate != nil {
+				t.Fatalf("saved config is not v8: %v\n%s", errValidate, saved)
+			}
+		})
+	}
+}

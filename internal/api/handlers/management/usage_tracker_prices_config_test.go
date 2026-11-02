@@ -84,3 +84,40 @@ func TestConfigUsagePricesWithoutConfigFileReturns500(t *testing.T) {
 	assertJSONEqual(t, "GET after failed PUT", decodeUsageJSON(t, serveUsageTracker(t, h, http.MethodGet, "/usage/prices", "")),
 		`{"prices":{"seed":{"input":1,"cache_read":0,"cache_write":0,"output":0}}}`)
 }
+
+func TestConfigUsagePricesPutRemovesModels(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	seed := "config-version: 8\nserver: {port: 8317}\nobservability:\n  usage:\n    tracker:\n      prices:\n        a: {input: 1, output: 2}\n        b: {input: 3, output: 4}\n"
+	if errWrite := os.WriteFile(path, []byte(seed), 0o600); errWrite != nil {
+		t.Fatal(errWrite)
+	}
+	cfg, errLoad := config.LoadConfig(path)
+	if errLoad != nil {
+		t.Fatal(errLoad)
+	}
+	h := NewHandler(cfg, path, nil)
+	h.setUsageSeriesStore(&fakeUsageStore{})
+
+	steps := []struct {
+		body string
+		want usagestore.Prices
+	}{
+		{body: `{"prices":{"a":{"input":1,"output":2}}}`, want: usagestore.Prices{"a": {Input: 1, Output: 2}}},
+		{body: `{"prices":{}}`, want: usagestore.Prices{}},
+	}
+	for _, step := range steps {
+		if rec := serveUsageTracker(t, h, http.MethodPut, "/usage/prices", step.body); rec.Code != http.StatusOK {
+			t.Fatalf("PUT %s: status=%d body=%s", step.body, rec.Code, rec.Body.String())
+		}
+		reloaded, errReload := config.LoadConfig(path)
+		if errReload != nil {
+			t.Fatal(errReload)
+		}
+		got := usagestore.Prices(reloaded.UsageTracker.Prices)
+		if len(got) != len(step.want) || (len(step.want) > 0 && !reflect.DeepEqual(got, step.want)) {
+			data, _ := os.ReadFile(path)
+			t.Fatalf("after PUT %s reloaded prices = %+v, want %+v\n%s", step.body, got, step.want, data)
+		}
+	}
+}
