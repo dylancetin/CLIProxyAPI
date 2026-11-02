@@ -79,6 +79,9 @@ type Config struct {
 	// Default: 60. Max: 3600.
 	RedisUsageQueueRetentionSeconds int `yaml:"redis-usage-queue-retention-seconds" json:"redis-usage-queue-retention-seconds"`
 
+	// UsageTracker controls the SQLite usage tracker, independent of UsageStatisticsEnabled.
+	UsageTracker UsageTrackerConfig `yaml:"usage-tracker" json:"usage-tracker"`
+
 	// DisableCooling disables auth/model cooldown scheduling when true unless a credential or provider overrides it.
 	DisableCooling bool `yaml:"disable-cooling" json:"disable-cooling"`
 

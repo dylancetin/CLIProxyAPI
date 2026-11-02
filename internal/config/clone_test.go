@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/registry"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore/pricing"
 	"gopkg.in/yaml.v3"
 )
 
@@ -202,6 +203,10 @@ func sampleCloneRuntimeConfig() *Config {
 			Models:         []VertexCompatModel{{Name: "vertex-upstream", Alias: "vertex-client"}},
 			ExcludedModels: []string{"vertex-hidden"},
 		}},
+		UsageTracker: UsageTrackerConfig{
+			Enabled: true,
+			Prices:  map[string]pricing.ModelPrice{"claude-upstream": {Input: 3, Output: 15}},
+		},
 		OAuthExcludedModels: map[string][]string{
 			"codex": {"hidden-model"},
 		},

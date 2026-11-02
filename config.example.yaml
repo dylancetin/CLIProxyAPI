@@ -1169,6 +1169,23 @@ observability:
     # Default: 60. Max: 3600.
     redis-usage-queue-retention-seconds: 60
 
+    # SQLite usage tracker: records every upstream attempt for the management usage charts.
+    # Independent of usage-statistics-enabled. Always off in Home mode.
+    tracker:
+      enabled: true
+      # Database file. Empty uses <auth-dir>/usage.sqlite. Changing it requires a restart.
+      sqlite-path: ""
+      # Days to keep per-attempt rows and hourly rollups. 0 keeps them forever.
+      raw-retention-days: 30
+      hourly-retention-days: 400
+      # Optional USD prices per 1,000,000 tokens, keyed by model id or "default".
+      # prices:
+      #   claude-opus-5-5:
+      #     input: 15
+      #     cache-read: 1.5
+      #     cache-write: 18.75
+      #     output: 75
+
   # Enable pprof HTTP debug server (host:port). Keep it bound to localhost for safety.
   pprof:
     enable: false

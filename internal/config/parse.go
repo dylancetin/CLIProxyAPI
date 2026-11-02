@@ -28,6 +28,7 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	cfg.ErrorLogsMaxFiles = 10
 	cfg.UsageStatisticsEnabled = false
 	cfg.RedisUsageQueueRetentionSeconds = 60
+	cfg.UsageTracker = DefaultUsageTrackerConfig()
 	cfg.DisableCooling = false
 	cfg.SaveCooldownStatus = false
 	cfg.TransientErrorCooldownSeconds = 0
@@ -102,6 +103,7 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	if cfg.MaxRetryCredentials < 0 {
 		cfg.MaxRetryCredentials = 0
 	}
+	cfg.normalizeUsageTracker()
 
 	cfg.NormalizePluginsConfig()
 	cfg.NormalizeClaudeConfig()
