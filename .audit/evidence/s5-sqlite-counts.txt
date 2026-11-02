@@ -1,0 +1,29 @@
+usage_events rows: 18
+usage_hourly rows: 17
+upstream attempts (ledger rows): 18
+client requests (script): 16
+distinct request_id: 18
+distinct trace_id: 16
+failed rows: 6
+events not matched by hourly: 0
+hourly not matched by events: 0
+
+per provider/model/account/api_key_hint/stream/failed: rows tokens
+claude | s5-claude-haiku | claude-alpha.json | sk-s…3e71 | 1 | 1 | 1 | 0
+claude | s5-claude-haiku | claude-alpha.json | sk-s…4f60 | 0 | 0 | 1 | 465
+claude | s5-claude-haiku | claude-alpha.json | sk-s…4f60 | 1 | 0 | 1 | 225
+claude | s5-claude-haiku | claude-bravo.json | sk-s…3e71 | 0 | 0 | 1 | 220
+claude | s5-claude-haiku | claude-bravo.json | sk-s…3e71 | 1 | 1 | 1 | 0
+claude | s5-claude-opus | claude-alpha.json | sk-s…4f60 | 0 | 0 | 1 | 145
+claude | s5-claude-opus | claude-alpha.json | sk-s…4f60 | 0 | 1 | 1 | 0
+claude | s5-claude-opus | claude-alpha.json | sk-s…4f60 | 1 | 0 | 1 | 300
+claude | s5-claude-opus | claude-bravo.json | sk-s…3e71 | 0 | 0 | 1 | 320
+claude | s5-claude-opus | claude-bravo.json | sk-s…3e71 | 1 | 0 | 1 | 200
+claude | s5-claude-opus | claude-bravo.json | sk-s…4f60 | 0 | 1 | 1 | 0
+s5-compat | s5-compat-large | s5-compat-main.json | sk-s…3e71 | 0 | 1 | 1 | 0
+s5-compat | s5-compat-large | s5-compat-main.json | sk-s…3e71 | 1 | 0 | 1 | 320
+s5-compat | s5-compat-large | s5-compat-main.json | sk-s…4f60 | 0 | 0 | 1 | 335
+s5-compat | s5-compat-large | s5-compat-main.json | sk-s…4f60 | 1 | 0 | 1 | 375
+s5-compat | s5-compat-small | s5-compat-main.json | sk-s…3e71 | 0 | 0 | 1 | 365
+s5-compat | s5-compat-small | s5-compat-main.json | sk-s…4f60 | 0 | 0 | 1 | 450
+s5-compat | s5-compat-small | s5-compat-main.json | sk-s…4f60 | 1 | 1 | 1 | 0

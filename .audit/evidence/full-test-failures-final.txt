@@ -1,0 +1,10 @@
+--- FAIL: TestPionMediaRelayBridgesAudioAndDataChannel (5.90s)
+FAIL
+FAIL	github.com/router-for-me/CLIProxyAPI/v8/internal/client/codex/live	7.113s
+--- FAIL: TestAdvertiserAndBrowser_Integration (5.00s)
+FAIL
+FAIL	github.com/router-for-me/CLIProxyAPI/v8/internal/discovery	5.184s
+--- FAIL: TestResponsesInterruptStopsHTTPUpstream (0.00s)
+FAIL
+FAIL	github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers/openai	10.936s
+FAIL

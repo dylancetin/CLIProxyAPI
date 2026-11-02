@@ -1,0 +1,12 @@
+2026-11-02T15:12:25.761Z http://127.0.0.1:41736/management.html#/dashboard?cpa-page=usage immediately after login (no remember), fresh context per run
+{"run":0,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":1,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":2,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":3,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":4,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":5,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":6,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":7,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":8,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+{"run":9,"boundaries":0,"overlay":true,"data":true,"host":"hidden/absolute/inset(50%)","hits":["section","section","section"],"consoleErrors":0,"hash":"#/dashboard?cpa-page=usage&cpa-range=24h"}
+error boundaries: 0 across 10 runs; overlay+data in 10/10; console errors: 0

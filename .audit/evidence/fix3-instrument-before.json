@@ -1,0 +1,269 @@
+{
+  "run": 0,
+  "state": "crashed",
+  "boundary": "Unexpected Application Error!\nFailed to execute 'commitStyles' on 'Animation': Target element is not rendered.\nInvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18533/management.html:1481:45386\n    at Array.forEach (<anonymous>)\n    at http://127.0.0.1:18533/management.html:1481:45373\n\n💿 Hey developer 👋\n\nYou can provide a way better UX than this when your app throws errors by providing your own ErrorBoundary or errorElement prop on your route.",
+  "log": [
+    {
+      "t": 1141,
+      "when": "main.main-content appeared",
+      "hash": "#/",
+      "cpaPage": null,
+      "wrapper": "div.page-transition rendered",
+      "wrapperAnimations": 19,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 2000,
+          "rendered": "rendered"
+        },
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1155,
+      "when": "hashchange",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": null,
+      "wrapper": "div.page-transition.page-transition--animating rendered",
+      "wrapperAnimations": 24,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 2000,
+          "rendered": "rendered"
+        },
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 100,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer.page-transition__layer--exit",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 220,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 360,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1163,
+      "when": "html[data-cpa-page] changed",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": "usage",
+      "wrapper": "div.page-transition.page-transition--animating hidden-by div.page-transition.page-transition--animating",
+      "wrapperAnimations": 22,
+      "anims": [
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 450,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "div.page-transition__layer.page-transition__layer--exit",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 220,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        },
+        {
+          "target": "div.page-transition__layer",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 360,
+          "rendered": "hidden-by div.page-transition.page-transition--animating"
+        }
+      ]
+    },
+    {
+      "t": 1540,
+      "when": "commitStyles",
+      "target": "p.dashboard-module__heroMeta___SsmPi",
+      "playState": "running",
+      "rendered": "hidden-by div.page-transition.page-transition--animating",
+      "cpaPage": "usage",
+      "error": "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.",
+      "stack": "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18533/management.html:1481:45386\n    at Array.forEach (<anonymous>)\n    at http://127.0.0.1:18533/management.html:1481:45373"
+    },
+    {
+      "t": 1546,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "hidden-by div.page-transition.page-transition--animating",
+      "cpaPage": "usage",
+      "error": "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.",
+      "stack": "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18533/management.html:1481:45386\n    at Array.forEach (<anonymous>)\n    at http://127.0.0.1:18533/management.html:1481:45373"
+    },
+    {
+      "t": 1556,
+      "when": "html[data-cpa-page] changed",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": null,
+      "wrapper": null,
+      "wrapperAnimations": 0,
+      "anims": []
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Error handled by React Router default ErrorBoundary: InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:185",
+    "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18533/management.html:1481:45386\n    at Array.forEach (<",
+    "React Router caught the following error during render InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18",
+    "InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18533/management.html:1481:45386\n    at Array.forEach (<",
+    "React Router caught the following error during render InvalidStateError: Failed to execute 'commitStyles' on 'Animation': Target element is not rendered.\n    at Animation.commitStyles (<anonymous>:33:21)\n    at zh.commitStyles (http://127.0.0.1:18533/management.html:1481:38978)\n    at zh.stop (http://127.0.0.1:18533/management.html:1481:38815)\n    at http://127.0.0.1:18533/management.html:1481:40815\n    at Array.forEach (<anonymous>)\n    at Hh.runAll (http://127.0.0.1:18533/management.html:1481:40800)\n    at Bh.stop (http://127.0.0.1:18533/management.html:1481:40046)\n    at http://127.0.0.1:18"
+  ],
+  "pageErrors": []
+}
+RESULT crashed

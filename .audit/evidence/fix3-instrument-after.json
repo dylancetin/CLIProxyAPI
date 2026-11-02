@@ -1,0 +1,391 @@
+{
+  "run": 0,
+  "state": "ok",
+  "boundary": null,
+  "log": [
+    {
+      "t": 1279,
+      "when": "main.main-content appeared",
+      "hash": "#/",
+      "cpaPage": null,
+      "wrapper": "div.page-transition rendered",
+      "wrapperAnimations": 19,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 2000,
+          "rendered": "rendered"
+        },
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 50,
+          "duration": 450,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1315,
+      "when": "hashchange",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": null,
+      "wrapper": "div.page-transition.page-transition--animating rendered",
+      "wrapperAnimations": 24,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 2000,
+          "rendered": "rendered"
+        },
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer.page-transition__layer--exit",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 220,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 360,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1332,
+      "when": "html[data-cpa-page] changed",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": "usage",
+      "wrapper": "div.page-transition.page-transition--animating rendered",
+      "wrapperAnimations": 24,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 117,
+          "duration": 2000,
+          "rendered": "rendered"
+        },
+        {
+          "target": "section.dashboard-module__section___SU27P",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "h1.dashboard-module__heroTitle___bjdUU",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "p.dashboard-module__heroMeta___SsmPi",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroActions___nMO4M",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.dashboard-module__heroPanel___sFbi-",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "article.dashboard-module__statTile___pRszo",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 83,
+          "duration": 450,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer.page-transition__layer--exit",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 220,
+          "rendered": "rendered"
+        },
+        {
+          "target": "div.page-transition__layer",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 0,
+          "duration": 360,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1710,
+      "when": "commitStyles",
+      "target": "p.dashboard-module__heroMeta___SsmPi",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1711,
+      "when": "commitStyles",
+      "target": "p.dashboard-module__heroMeta___SsmPi",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1711,
+      "when": "commitStyles",
+      "target": "div.dashboard-module__heroActions___nMO4M",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1711,
+      "when": "commitStyles",
+      "target": "div.dashboard-module__heroActions___nMO4M",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1711,
+      "when": "commitStyles",
+      "target": "div.dashboard-module__heroPanel___sFbi-",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1711,
+      "when": "commitStyles",
+      "target": "div.dashboard-module__heroPanel___sFbi-",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1712,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1712,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1712,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1713,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1713,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1713,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1713,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1713,
+      "when": "commitStyles",
+      "target": "article.dashboard-module__statTile___pRszo",
+      "playState": "running",
+      "rendered": "rendered",
+      "cpaPage": "usage"
+    },
+    {
+      "t": 1725,
+      "when": "html[data-cpa-page] changed",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": "usage",
+      "wrapper": "div.page-transition rendered",
+      "wrapperAnimations": 1,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 383,
+          "duration": 2000,
+          "rendered": "rendered"
+        }
+      ]
+    },
+    {
+      "t": 1807,
+      "when": "html[data-cpa-page] changed",
+      "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+      "cpaPage": "usage",
+      "wrapper": "div.page-transition rendered",
+      "wrapperAnimations": 1,
+      "anims": [
+        {
+          "target": "i.dashboard-module__liveDot___VGdIG",
+          "inMain": true,
+          "playState": "running",
+          "currentTime": 467,
+          "duration": 2000,
+          "rendered": "rendered"
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "pageErrors": []
+}
+RESULT ok

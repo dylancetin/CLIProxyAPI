@@ -1,0 +1,5372 @@
+{
+ "startedAt": "2026-11-02T15:10:43.960Z",
+ "base": "http://127.0.0.1:41736",
+ "checks": [
+  {
+   "name": "login: remember-password checkbox left unchecked",
+   "pass": true,
+   "rememberBefore": false,
+   "rememberAfter": false
+  },
+  {
+   "name": "login: no management key stored (key must come from panel requests)",
+   "pass": true,
+   "raw": "enc::v2::…",
+   "key": null,
+   "keys": [
+    "apiBase",
+    "rememberPassword",
+    "serverVersion",
+    "serverBuildDate"
+   ]
+  },
+  {
+   "name": "nav: Usage item sits right after Logs in the observe group",
+   "pass": true,
+   "prev": "#/logs",
+   "group": "OperateDashboardQuick Start",
+   "text": "Usage",
+   "sectionHrefs": [
+    "#/",
+    "#/quick-start",
+    "#/ai-providers",
+    "#/auth-files",
+    "#/oauth",
+    "#/routing",
+    "#/quota",
+    "#/logs",
+    "#/dashboard?cpa-page=usage",
+    "#/config",
+    "#/plugins",
+    "#/plugin-store",
+    "#/system"
+   ]
+  },
+  {
+   "name": "host page never shows through after the overlay mounts (per-frame sample, nav click)",
+   "pass": true,
+   "frames": 150,
+   "mounted": 93,
+   "showThrough": []
+  },
+  {
+   "name": "no layout jump: section top and h1 constant across all mounted frames",
+   "pass": true,
+   "tops": [
+    78
+   ],
+   "h1s": [
+    78
+   ],
+   "tilesTops": [
+    201
+   ]
+  },
+  {
+   "name": "host hidden via visibility+absolute+clip-path; hit tests land in section",
+   "pass": true,
+   "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+   "crashed": false,
+   "overlay": true,
+   "cpaPage": "usage",
+   "host": "hidden/absolute/inset(50%)",
+   "hostVisible": false,
+   "hits": [
+    "section",
+    "section",
+    "section"
+   ],
+   "sectionTop": 78,
+   "sectionHeight": 1260,
+   "scroll": [
+    0,
+    1378,
+    1000
+   ],
+   "loginForm": false,
+   "status": "Updated 10:10:46 AM",
+   "activeNav": [
+    "#/dashboard?cpa-page=usage"
+   ],
+   "mainChildren": 2,
+   "mainText": 1568
+  },
+  {
+   "name": "scroll container not extended by hidden host",
+   "pass": true,
+   "scroll": [
+    0,
+    1378,
+    1000
+   ],
+   "sectionHeight": 1260
+  },
+  {
+   "name": "open usage: series, summary, dimensions, prices requested with captured bearer key, all 200",
+   "pass": true,
+   "reqs": [
+    {
+     "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+     "auth": true,
+     "status": 200
+    },
+    {
+     "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+     "auth": true,
+     "status": 200
+    },
+    {
+     "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+     "auth": true,
+     "status": 200
+    },
+    {
+     "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+     "auth": true,
+     "status": 200
+    }
+   ]
+  },
+  {
+   "name": "open usage: hash route mirrors cpa-page and range",
+   "pass": true,
+   "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+  },
+  {
+   "name": "stat tiles (30d) equal tiles computed from fresh curl of the same summary query",
+   "pass": true,
+   "page": [
+    [
+     "Requests",
+     "3k",
+     ""
+    ],
+    [
+     "Failures",
+     "110",
+     "3.7% of requests"
+    ],
+    [
+     "Total tokens",
+     "118M",
+     "71.4M cache read"
+    ],
+    [
+     "Input / output",
+     "109M / 9.1M",
+     "3.3M reasoning"
+    ],
+    [
+     "Avg latency",
+     "21.8 s",
+     "Max 45.2 s"
+    ],
+    [
+     "Avg TTFT",
+     "2.64 s",
+     "1.8k measured"
+    ],
+    [
+     "Estimated cost",
+     "$241.67",
+     "4 models unpriced"
+    ]
+   ],
+   "expected": [
+    [
+     "Requests",
+     "3k",
+     ""
+    ],
+    [
+     "Failures",
+     "110",
+     "3.7% of requests"
+    ],
+    [
+     "Total tokens",
+     "118M",
+     "71.4M cache read"
+    ],
+    [
+     "Input / output",
+     "109M / 9.1M",
+     "3.3M reasoning"
+    ],
+    [
+     "Avg latency",
+     "21.8 s",
+     "Max 45.2 s"
+    ],
+    [
+     "Avg TTFT",
+     "2.64 s",
+     "1.8k measured"
+    ],
+    [
+     "Estimated cost",
+     "$241.67",
+     "4 models unpriced"
+    ]
+   ]
+  },
+  {
+   "name": "cost tile sub-label names unpriced models",
+   "pass": true,
+   "costTile": [
+    "Estimated cost",
+    "$241.67",
+    "4 models unpriced"
+   ]
+  },
+  {
+   "name": "table toggle: plot and legend hidden, table shown, aria-pressed=true",
+   "pass": true,
+   "plotHidden": true,
+   "tableHidden": false,
+   "legendHidden": true,
+   "pressed": "true"
+  },
+  {
+   "name": "provider daily table (requests) equals curl series ?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "pass": true,
+   "pageHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "wantHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "firstDiff": -1
+  },
+  {
+   "name": "provider daily table (failures) equals curl series ?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "pass": true,
+   "pageHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "wantHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "firstDiff": -1
+  },
+  {
+   "name": "provider daily table (tokens) equals curl series ?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "pass": true,
+   "pageHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "wantHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "firstDiff": -1
+  },
+  {
+   "name": "provider daily table (cost) equals curl series ?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "pass": true,
+   "pageHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "wantHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "firstDiff": -1
+  },
+  {
+   "name": "CSV export (requests) has the same header, rows and values as the table",
+   "pass": true,
+   "file": "cpa-usage-requests-provider-2026100300.csv",
+   "csvHead": [
+    "bucket_start_utc",
+    "claude",
+    "codex",
+    "gemini",
+    "total"
+   ],
+   "tableHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "csvRows": 31,
+   "tableRows": 31,
+   "bad": []
+  },
+  {
+   "name": "CSV export (cost) has the same header, rows and values as the table",
+   "pass": true,
+   "file": "cpa-usage-cost-provider-2026100300.csv",
+   "csvHead": [
+    "bucket_start_utc",
+    "claude",
+    "codex",
+    "gemini",
+    "total"
+   ],
+   "tableHead": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "csvRows": 31,
+   "tableRows": 31,
+   "bad": []
+  },
+  {
+   "name": "provider breakdown table equals curl summary.by.provider",
+   "pass": true,
+   "page": [
+    [
+     "claude",
+     "1,185",
+     "38",
+     "44,183,665",
+     "40,528,337",
+     "3,655,328",
+     "28,303,716",
+     "22 s",
+     "$212.63"
+    ],
+    [
+     "codex",
+     "937",
+     "34",
+     "36,983,862",
+     "34,180,786",
+     "2,803,076",
+     "22,111,360",
+     "22.4 s",
+     "$29.03"
+    ],
+    [
+     "gemini",
+     "878",
+     "38",
+     "36,648,174",
+     "33,986,230",
+     "2,661,944",
+     "20,948,188",
+     "20.9 s",
+     "$0.00"
+    ]
+   ],
+   "expected": [
+    [
+     "claude",
+     "1,185",
+     "38",
+     "44,183,665",
+     "40,528,337",
+     "3,655,328",
+     "28,303,716",
+     "22 s",
+     "$212.63"
+    ],
+    [
+     "codex",
+     "937",
+     "34",
+     "36,983,862",
+     "34,180,786",
+     "2,803,076",
+     "22,111,360",
+     "22.4 s",
+     "$29.03"
+    ],
+    [
+     "gemini",
+     "878",
+     "38",
+     "36,648,174",
+     "33,986,230",
+     "2,661,944",
+     "20,948,188",
+     "20.9 s",
+     "$0.00"
+    ]
+   ]
+  },
+  {
+   "name": "api_key breakdown table equals curl summary.by.api_key",
+   "pass": true,
+   "page": [
+    [
+     "sk-…f80",
+     "1,238",
+     "42",
+     "48,057,238",
+     "44,195,138",
+     "3,862,100",
+     "29,091,701",
+     "21.5 s",
+     "$106.60"
+    ],
+    [
+     "sk-…397",
+     "744",
+     "31",
+     "29,085,005",
+     "26,835,149",
+     "2,249,856",
+     "17,330,562",
+     "22.3 s",
+     "$60.38"
+    ],
+    [
+     "sk-…3e5",
+     "578",
+     "27",
+     "22,174,801",
+     "20,478,926",
+     "1,695,875",
+     "13,316,613",
+     "21.4 s",
+     "$43.82"
+    ],
+    [
+     "(none)",
+     "440",
+     "10",
+     "18,498,657",
+     "17,186,140",
+     "1,312,517",
+     "11,624,388",
+     "22.4 s",
+     "$30.87"
+    ]
+   ],
+   "expected": [
+    [
+     "sk-…f80",
+     "1,238",
+     "42",
+     "48,057,238",
+     "44,195,138",
+     "3,862,100",
+     "29,091,701",
+     "21.5 s",
+     "$106.60"
+    ],
+    [
+     "sk-…397",
+     "744",
+     "31",
+     "29,085,005",
+     "26,835,149",
+     "2,249,856",
+     "17,330,562",
+     "22.3 s",
+     "$60.38"
+    ],
+    [
+     "sk-…3e5",
+     "578",
+     "27",
+     "22,174,801",
+     "20,478,926",
+     "1,695,875",
+     "13,316,613",
+     "21.4 s",
+     "$43.82"
+    ],
+    [
+     "(none)",
+     "440",
+     "10",
+     "18,498,657",
+     "17,186,140",
+     "1,312,517",
+     "11,624,388",
+     "22.4 s",
+     "$30.87"
+    ]
+   ]
+  },
+  {
+   "name": "api_key table shows masked hints only (no raw key, no hash)",
+   "pass": true,
+   "names": [
+    "sk-…f80",
+    "sk-…397",
+    "sk-…3e5",
+    "(none)"
+   ],
+   "leaks": []
+  },
+  {
+   "name": "top 5 (requested_model+stream): legend equals curl series labels, limit=5 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "Other"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "Other"
+   ]
+  },
+  {
+   "name": "top 5 (requested_model+stream): 5 named + 1 Other, 0 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 5,
+   "legend": 6,
+   "named": 5,
+   "other": 1,
+   "hatchedSwatches": 0,
+   "patterns": 0,
+   "hatchedFills": 0,
+   "distinctStyles": 5
+  },
+  {
+   "name": "top 10 (requested_model+stream): legend equals curl series labels, limit=10 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "claude-opus-5-5 / stream",
+    "gemini-3-pro / stream",
+    "flash / stream",
+    "gemini-3-flash / stream",
+    "gemini-3-pro / sync",
+    "Other"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "claude-opus-5-5 / stream",
+    "gemini-3-pro / stream",
+    "flash / stream",
+    "gemini-3-flash / stream",
+    "gemini-3-pro / sync",
+    "Other"
+   ]
+  },
+  {
+   "name": "top 10 (requested_model+stream): 10 named + 1 Other, 2 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 10,
+   "legend": 11,
+   "named": 10,
+   "other": 1,
+   "hatchedSwatches": 2,
+   "patterns": 2,
+   "hatchedFills": 2,
+   "distinctStyles": 10
+  },
+  {
+   "name": "top 20 (requested_model+stream): legend equals curl series labels, limit=20 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "claude-opus-5-5 / stream",
+    "gemini-3-pro / stream",
+    "flash / stream",
+    "gemini-3-flash / stream",
+    "gemini-3-pro / sync",
+    "gpt-6.1-codex / sync",
+    "claude-opus-5-5 / sync",
+    "gemini-3-flash / sync",
+    "opus / stream",
+    "gemini-pro-latest / stream",
+    "flash / sync",
+    "opus / sync",
+    "gemini-pro-latest / sync"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / stream",
+    "gpt-6.1 / stream",
+    "claude-sonnet-5-5 / sync",
+    "gpt-6.1 / sync",
+    "gpt-6.1-codex / stream",
+    "claude-opus-5-5 / stream",
+    "gemini-3-pro / stream",
+    "flash / stream",
+    "gemini-3-flash / stream",
+    "gemini-3-pro / sync",
+    "gpt-6.1-codex / sync",
+    "claude-opus-5-5 / sync",
+    "gemini-3-flash / sync",
+    "opus / stream",
+    "gemini-pro-latest / stream",
+    "flash / sync",
+    "opus / sync",
+    "gemini-pro-latest / sync"
+   ]
+  },
+  {
+   "name": "top 20 (requested_model+stream): 18 named + 0 Other, 10 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 20,
+   "legend": 18,
+   "named": 18,
+   "other": 0,
+   "hatchedSwatches": 10,
+   "patterns": 10,
+   "hatchedFills": 10,
+   "distinctStyles": 18
+  },
+  {
+   "name": "top N (requested_model+stream): a series keeps its colour and pattern across Top 5, 10, 20",
+   "pass": true,
+   "top5": {
+    "requested_model=claude-sonnet-5-5\u001fstream=stream": "var(--cpa-series-3)|",
+    "requested_model=gpt-6.1\u001fstream=stream": "var(--cpa-series-8)|",
+    "requested_model=claude-sonnet-5-5\u001fstream=sync": "var(--cpa-series-2)|",
+    "requested_model=gpt-6.1\u001fstream=sync": "var(--cpa-series-1)|",
+    "requested_model=gpt-6.1-codex\u001fstream=stream": "var(--cpa-series-6)|"
+   }
+  },
+  {
+   "name": "top 5 (model+api_key): legend equals curl series labels, limit=5 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "Other"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "Other"
+   ]
+  },
+  {
+   "name": "top 5 (model+api_key): 5 named + 1 Other, 0 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 5,
+   "legend": 6,
+   "named": 5,
+   "other": 1,
+   "hatchedSwatches": 0,
+   "patterns": 0,
+   "hatchedFills": 0,
+   "distinctStyles": 5
+  },
+  {
+   "name": "top 10 (model+api_key): legend equals curl series labels, limit=10 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "gpt-6.1 / sk-…397",
+    "claude-sonnet-5-5 / sk-…397",
+    "gpt-6.1-codex-2026-10-01 / sk-…f80",
+    "claude-sonnet-5-5 / sk-…3e5",
+    "gemini-3-flash / sk-…397",
+    "Other"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "gpt-6.1 / sk-…397",
+    "claude-sonnet-5-5 / sk-…397",
+    "gpt-6.1-codex-2026-10-01 / sk-…f80",
+    "claude-sonnet-5-5 / sk-…3e5",
+    "gemini-3-flash / sk-…397",
+    "Other"
+   ]
+  },
+  {
+   "name": "top 10 (model+api_key): 10 named + 1 Other, 2 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 10,
+   "legend": 11,
+   "named": 10,
+   "other": 1,
+   "hatchedSwatches": 2,
+   "patterns": 2,
+   "hatchedFills": 2,
+   "distinctStyles": 10
+  },
+  {
+   "name": "top 20 (model+api_key): legend equals curl series labels, limit=20 sent",
+   "pass": true,
+   "page": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "gpt-6.1 / sk-…397",
+    "claude-sonnet-5-5 / sk-…397",
+    "gpt-6.1-codex-2026-10-01 / sk-…f80",
+    "claude-sonnet-5-5 / sk-…3e5",
+    "gemini-3-flash / sk-…397",
+    "claude-sonnet-5-5 / (none)",
+    "gemini-3-pro / sk-…397",
+    "gpt-6.1 / sk-…3e5",
+    "claude-opus-5-5 / sk-…397",
+    "gpt-6.1 / (none)",
+    "claude-opus-5-5 / sk-…3e5",
+    "gpt-6.1-codex-2026-10-01 / sk-…3e5",
+    "gemini-3-flash / sk-…3e5",
+    "gpt-6.1-codex-2026-10-01 / sk-…397",
+    "gemini-3-pro / sk-…3e5",
+    "Other"
+   ],
+   "want": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "gpt-6.1 / sk-…397",
+    "claude-sonnet-5-5 / sk-…397",
+    "gpt-6.1-codex-2026-10-01 / sk-…f80",
+    "claude-sonnet-5-5 / sk-…3e5",
+    "gemini-3-flash / sk-…397",
+    "claude-sonnet-5-5 / (none)",
+    "gemini-3-pro / sk-…397",
+    "gpt-6.1 / sk-…3e5",
+    "claude-opus-5-5 / sk-…397",
+    "gpt-6.1 / (none)",
+    "claude-opus-5-5 / sk-…3e5",
+    "gpt-6.1-codex-2026-10-01 / sk-…3e5",
+    "gemini-3-flash / sk-…3e5",
+    "gpt-6.1-codex-2026-10-01 / sk-…397",
+    "gemini-3-pro / sk-…3e5",
+    "Other"
+   ]
+  },
+  {
+   "name": "top 20 (model+api_key): 20 named + 1 Other, 12 hatched swatches (expect max(0, named-8)), all styles distinct",
+   "pass": true,
+   "limitParam": 20,
+   "legend": 21,
+   "named": 20,
+   "other": 1,
+   "hatchedSwatches": 12,
+   "patterns": 12,
+   "hatchedFills": 12,
+   "distinctStyles": 20
+  },
+  {
+   "name": "top N (model+api_key): a series keeps its colour and pattern across Top 5, 10, 20",
+   "pass": true,
+   "top5": {
+    "model=claude-sonnet-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6": "var(--cpa-series-3)|",
+    "model=gpt-6.1\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6": "var(--cpa-series-2)|",
+    "model=claude-opus-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6": "var(--cpa-series-4)|",
+    "model=gemini-3-flash\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6": "var(--cpa-series-7)|",
+    "model=gemini-3-pro\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6": "var(--cpa-series-5)|"
+   }
+  },
+  {
+   "name": "group by model then api_key: chart title and two-part labels with masked key hints",
+   "pass": true,
+   "title": "Total tokens by Model / API key",
+   "labels": [
+    "claude-sonnet-5-5 / sk-…f80",
+    "gpt-6.1 / sk-…f80",
+    "claude-opus-5-5 / sk-…f80",
+    "gemini-3-flash / sk-…f80",
+    "gemini-3-pro / sk-…f80",
+    "gpt-6.1 / sk-…397",
+    "claude-sonnet-5-5 / sk-…397",
+    "gpt-6.1-codex-2026-10-01 / sk-…f80",
+    "claude-sonnet-5-5 / sk-…3e5",
+    "gemini-3-flash / sk-…397",
+    "Other"
+   ]
+  },
+  {
+   "name": "lines + log scale: one line per series, no bars, log ticks are powers of ten",
+   "pass": true,
+   "lines": 6,
+   "visible": 6,
+   "linearTicks": [
+    "0",
+    "50",
+    "100",
+    "150",
+    "Oct 8",
+    "Oct 15",
+    "Oct 22",
+    "Oct 29",
+    "Days (UTC)"
+   ],
+   "logTicks": [
+    "10",
+    "100",
+    "1k",
+    "Oct 8",
+    "Oct 15",
+    "Oct 22",
+    "Oct 29",
+    "Days (UTC)"
+   ]
+  },
+  {
+   "0": {
+    "name": "metric tokens->requests",
+    "changed": true,
+    "after": {
+     "bars": 3,
+     "lines": 0,
+     "areas": 0,
+     "title": "Requests by Provider"
+    }
+   },
+   "1": {
+    "name": "group provider->model",
+    "changed": true,
+    "after": {
+     "bars": 6,
+     "lines": 0,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "2": {
+    "name": "type stacked->grouped",
+    "changed": true,
+    "after": {
+     "bars": 6,
+     "lines": 0,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "3": {
+    "name": "type grouped->area",
+    "changed": true,
+    "after": {
+     "bars": 0,
+     "lines": 6,
+     "areas": 6,
+     "title": "Requests by Model"
+    }
+   },
+   "4": {
+    "name": "type area->lines",
+    "changed": true,
+    "after": {
+     "bars": 0,
+     "lines": 6,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "5": {
+    "name": "scale linear->log",
+    "changed": true,
+    "after": {
+     "bars": 0,
+     "lines": 6,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "6": {
+    "name": "bucket day->hour",
+    "changed": true,
+    "after": {
+     "bars": 6,
+     "lines": 0,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "7": {
+    "name": "range 30d->7d",
+    "changed": true,
+    "after": {
+     "bars": 6,
+     "lines": 0,
+     "areas": 0,
+     "title": "Requests by Model"
+    }
+   },
+   "name": "each control (metric, group, chart type x3, scale, bucket, range) changes the rendering",
+   "pass": true
+  },
+  {
+   "name": "provider filter sent on series and summary (not on dimensions)",
+   "pass": true,
+   "series": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&filter.provider=claude&bucket=day&limit=10&group=provider",
+   "summary": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000&filter.provider=claude",
+   "dimensions": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000"
+  },
+  {
+   "name": "filtered tiles equal curl of filtered summary (claude: 1185 req)",
+   "pass": true,
+   "page": [
+    [
+     "Requests",
+     "1.2k",
+     ""
+    ],
+    [
+     "Failures",
+     "38",
+     "3.2% of requests"
+    ],
+    [
+     "Total tokens",
+     "44.2M",
+     "28.3M cache read"
+    ],
+    [
+     "Input / output",
+     "40.5M / 3.7M",
+     "1.3M reasoning"
+    ],
+    [
+     "Avg latency",
+     "22 s",
+     "Max 45.2 s"
+    ],
+    [
+     "Avg TTFT",
+     "2.68 s",
+     "695 measured"
+    ],
+    [
+     "Estimated cost",
+     "$212.63",
+     "1 model unpriced"
+    ]
+   ],
+   "expected": [
+    [
+     "Requests",
+     "1.2k",
+     ""
+    ],
+    [
+     "Failures",
+     "38",
+     "3.2% of requests"
+    ],
+    [
+     "Total tokens",
+     "44.2M",
+     "28.3M cache read"
+    ],
+    [
+     "Input / output",
+     "40.5M / 3.7M",
+     "1.3M reasoning"
+    ],
+    [
+     "Avg latency",
+     "22 s",
+     "Max 45.2 s"
+    ],
+    [
+     "Avg TTFT",
+     "2.68 s",
+     "695 measured"
+    ],
+    [
+     "Estimated cost",
+     "$212.63",
+     "1 model unpriced"
+    ]
+   ],
+   "curlRequests": 1185
+  },
+  {
+   "name": "filtered series/legend and breakdown show only claude",
+   "pass": true,
+   "seriesKeys": [
+    {
+     "provider": "claude"
+    }
+   ],
+   "legendHidden": true,
+   "rows": [
+    [
+     "claude",
+     "1,185",
+     "38",
+     "44,183,665",
+     "40,528,337",
+     "3,655,328",
+     "28,303,716",
+     "22 s",
+     "$212.63"
+    ]
+   ]
+  },
+  {
+   "name": "filter chip shown",
+   "pass": true,
+   "chip": [
+    "Provider: claude×"
+   ]
+  },
+  {
+   "name": "clear filters removes filter from the next series query",
+   "pass": true,
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider"
+  },
+  {
+   "name": "legend (metric cost, group model) marks exactly the unpriced models",
+   "pass": true,
+   "marked": [
+    "claude-sonnet-5-5",
+    "gemini-3-flash",
+    "gemini-3-pro",
+    "gpt-6.1-codex-2026-10-01"
+   ],
+   "unpricedModels": [
+    "claude-sonnet-5-5",
+    "gemini-3-flash",
+    "gemini-3-pro",
+    "gpt-6.1-codex-2026-10-01"
+   ],
+   "legend": [
+    "claude-sonnet-5-5 [unpriced]",
+    "gpt-6.1",
+    "claude-opus-5-5",
+    "gemini-3-flash [unpriced]",
+    "gemini-3-pro [unpriced]",
+    "gpt-6.1-codex-2026-10-01 [unpriced]"
+   ]
+  },
+  {
+   "name": "model breakdown: cost cell says 'unpriced' (class cpa-u-unpriced) for unpriced models, $ for priced; table equals curl",
+   "pass": true,
+   "costCells": [
+    [
+     "claude-sonnet-5-5",
+     "unpriced",
+     "cpa-u-unpriced"
+    ],
+    [
+     "gpt-6.1",
+     "$29.03",
+     ""
+    ],
+    [
+     "claude-opus-5-5",
+     "$212.63",
+     ""
+    ],
+    [
+     "gemini-3-flash",
+     "unpriced",
+     "cpa-u-unpriced"
+    ],
+    [
+     "gemini-3-pro",
+     "unpriced",
+     "cpa-u-unpriced"
+    ],
+    [
+     "gpt-6.1-codex-2026-10-01",
+     "unpriced",
+     "cpa-u-unpriced"
+    ]
+   ]
+  },
+  {
+   "name": "cost tile sub-label: '4 models unpriced'",
+   "pass": true,
+   "costTile": [
+    "Estimated cost",
+    "$241.67",
+    "4 models unpriced"
+   ]
+  },
+  {
+   "name": "totals total: seed == API == page (requests, failures, tokens, cost$)",
+   "pass": true,
+   "scope": "total",
+   "seed": [
+    3000,
+    110,
+    117815701,
+    241.67
+   ],
+   "api": [
+    3000,
+    110,
+    117815701,
+    241.67
+   ],
+   "page": [
+    3000,
+    110,
+    117815701,
+    241.67
+   ],
+   "pageNote": "requests/failures/tokens = sum of provider breakdown rows; cost = cost tile",
+   "pageTiles": [
+    "3k",
+    "110",
+    "118M",
+    "109M / 9.1M",
+    "21.8 s",
+    "2.64 s",
+    "$241.67"
+   ]
+  },
+  {
+   "name": "totals claude: seed == API == page (requests, failures, tokens, cost$)",
+   "pass": true,
+   "scope": "claude",
+   "seed": [
+    1185,
+    38,
+    44183665,
+    212.63
+   ],
+   "api": [
+    1185,
+    38,
+    44183665,
+    212.63
+   ],
+   "page": [
+    1185,
+    38,
+    44183665,
+    212.63
+   ],
+   "pageDailySum": [
+    1185,
+    38,
+    44183665,
+    212.63
+   ]
+  },
+  {
+   "name": "totals codex: seed == API == page (requests, failures, tokens, cost$)",
+   "pass": true,
+   "scope": "codex",
+   "seed": [
+    937,
+    34,
+    36983862,
+    29.03
+   ],
+   "api": [
+    937,
+    34,
+    36983862,
+    29.03
+   ],
+   "page": [
+    937,
+    34,
+    36983862,
+    29.03
+   ],
+   "pageDailySum": [
+    937,
+    34,
+    36983862,
+    29.03
+   ]
+  },
+  {
+   "name": "totals gemini: seed == API == page (requests, failures, tokens, cost$)",
+   "pass": true,
+   "scope": "gemini",
+   "seed": [
+    878,
+    38,
+    36648174,
+    0
+   ],
+   "api": [
+    878,
+    38,
+    36648174,
+    0
+   ],
+   "page": [
+    878,
+    38,
+    36648174,
+    0
+   ],
+   "pageDailySum": [
+    878,
+    38,
+    36648174,
+    0
+   ]
+  },
+  {
+   "name": "price PUT 200 with whole map incl. new model",
+   "pass": true,
+   "status": 200,
+   "putBody": {
+    "prices": {
+     "claude-opus-5-5": {
+      "input": 15,
+      "cache_read": 1.5,
+      "cache_write": 18.75,
+      "output": 75
+     },
+     "gpt-6.1": {
+      "input": 1.25,
+      "cache_read": 0.125,
+      "cache_write": 0,
+      "output": 10
+     },
+     "claude-sonnet-5-5": {
+      "input": 3,
+      "cache_read": 0.3,
+      "cache_write": 3.75,
+      "output": 15
+     }
+    }
+   }
+  },
+  {
+   "name": "cost tile changes after save and matches curl and independent seed math",
+   "pass": true,
+   "tileBefore": [
+    "Estimated cost",
+    "$241.67",
+    "4 models unpriced"
+   ],
+   "tileAfter": [
+    "Estimated cost",
+    "$299.85",
+    "3 models unpriced"
+   ],
+   "api": 299.8539551,
+   "expectCost": 299.85395509999995
+  },
+  {
+   "name": "price persisted to config file",
+   "pass": true,
+   "block": "claude-sonnet-5-5:\n                    input: 3\n                    cache-read: 0.3\n                    cache-write: 3.75\n                    output: 15\n       "
+  },
+  {
+   "name": "price edit survives watcher reload (config reloaded, prices and cost unchanged, tile unchanged)",
+   "pass": true,
+   "reloadsBeforePut": 0,
+   "reloadsAfterPut": 1,
+   "reloaded": true,
+   "pricesReload": {
+    "claude-opus-5-5": {
+     "input": 15,
+     "cache_read": 1.5,
+     "cache_write": 18.75,
+     "output": 75
+    },
+    "claude-sonnet-5-5": {
+     "input": 3,
+     "cache_read": 0.3,
+     "cache_write": 3.75,
+     "output": 15
+    },
+    "gpt-6.1": {
+     "input": 1.25,
+     "cache_read": 0.125,
+     "cache_write": 0,
+     "output": 10
+    }
+   },
+   "apiCost": 299.8539551,
+   "tileReload": [
+    "Estimated cost",
+    "$299.85",
+    "3 models unpriced"
+   ]
+  },
+  {
+   "name": "rapid range changes: superseded loads aborted in the browser, final view = last range (30d) with matching tiles",
+   "pass": true,
+   "requests": 90,
+   "aborted": 54,
+   "abortedSample": [
+    {
+     "url": "/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    }
+   ],
+   "finalHash": "#/dashboard?cpa-page=usage&cpa-range=30d",
+   "lastSeries": "/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key"
+  },
+  {
+   "name": "host page logs renders with overlay injected (no crash, overlay unmounted, content present)",
+   "pass": true,
+   "hash": "#/logs",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    1000,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/logs"
+   ],
+   "mainChildren": 1,
+   "mainText": 357
+  },
+  {
+   "name": "host page quota renders with overlay injected (no crash, overlay unmounted, content present)",
+   "pass": true,
+   "hash": "#/quota",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    1000,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/quota"
+   ],
+   "mainChildren": 1,
+   "mainText": 288
+  },
+  {
+   "name": "host page dashboard renders with overlay injected (no crash, overlay unmounted, content present)",
+   "pass": true,
+   "hash": "#/",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    2317,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/"
+   ],
+   "mainChildren": 1,
+   "mainText": 1376
+  },
+  {
+   "name": "login with remember password checked",
+   "pass": true,
+   "rememberBefore": false,
+   "rememberAfter": true
+  },
+  {
+   "name": "Back from Usage returns to Dashboard (overlay unmounted, no crash)",
+   "pass": true,
+   "dash": "#/",
+   "back": {
+    "hash": "#/",
+    "crashed": false,
+    "overlay": false,
+    "cpaPage": null,
+    "host": "visible/relative/none",
+    "hostVisible": true,
+    "hits": [],
+    "sectionTop": null,
+    "sectionHeight": null,
+    "scroll": [
+     0,
+     2317,
+     1000
+    ],
+    "loginForm": false,
+    "status": null,
+    "activeNav": [
+     "#/"
+    ],
+    "mainChildren": 1,
+    "mainText": 1376
+   }
+  },
+  {
+   "name": "Forward returns to Usage (overlay mounted, data loaded, host hidden)",
+   "pass": true,
+   "hash": "#/dashboard?cpa-page=usage&cpa-range=30d",
+   "crashed": false,
+   "overlay": true,
+   "cpaPage": "usage",
+   "host": "hidden/absolute/inset(50%)",
+   "hostVisible": false,
+   "hits": [
+    "section",
+    "section",
+    "section"
+   ],
+   "sectionTop": 78,
+   "sectionHeight": 1395,
+   "scroll": [
+    0,
+    1513,
+    1000
+   ],
+   "loginForm": false,
+   "status": "Updated 10:11:30 AM",
+   "activeNav": [
+    "#/dashboard?cpa-page=usage"
+   ],
+   "mainChildren": 2,
+   "mainText": 2039
+  },
+  {
+   "name": "Logs then Back returns to Usage with data",
+   "pass": true,
+   "logs": {
+    "hash": "#/logs",
+    "overlay": false
+   },
+   "backFromLogs": {
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=30d",
+    "crashed": false,
+    "overlay": true,
+    "cpaPage": "usage",
+    "host": "hidden/absolute/inset(50%)",
+    "hostVisible": false,
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "sectionTop": 78,
+    "sectionHeight": 1395,
+    "scroll": [
+     0,
+     1513,
+     1000
+    ],
+    "loginForm": false,
+    "status": "Updated 10:11:30 AM",
+    "activeNav": [
+     "#/dashboard?cpa-page=usage"
+    ],
+    "mainChildren": 2,
+    "mainText": 2039
+   }
+  },
+  {
+   "name": "reload on Usage with remember on: stays signed in, overlay restored with data",
+   "pass": true,
+   "hash": "#/dashboard?cpa-page=usage&cpa-range=30d",
+   "crashed": false,
+   "overlay": true,
+   "cpaPage": "usage",
+   "host": "hidden/absolute/inset(50%)",
+   "hostVisible": false,
+   "hits": [
+    "section",
+    "section",
+    "section"
+   ],
+   "sectionTop": 78,
+   "sectionHeight": 1395,
+   "scroll": [
+    0,
+    1513,
+    1000
+   ],
+   "loginForm": false,
+   "status": "Updated 10:11:35 AM",
+   "activeNav": [
+    "#/dashboard?cpa-page=usage"
+   ],
+   "mainChildren": 2,
+   "mainText": 2039
+  },
+  {
+   "name": "colours of the first eight series identical before and after reload (and all 21 entries)",
+   "pass": true,
+   "before": [
+    {
+     "id": "model=claude-sonnet-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-3)",
+     "cls": "",
+     "bg": "rgb(25, 158, 112)"
+    },
+    {
+     "id": "model=gpt-6.1\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-2)",
+     "cls": "",
+     "bg": "rgb(217, 89, 38)"
+    },
+    {
+     "id": "model=claude-opus-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-4)",
+     "cls": "",
+     "bg": "rgb(201, 133, 0)"
+    },
+    {
+     "id": "model=gemini-3-flash\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-7)",
+     "cls": "",
+     "bg": "rgb(144, 133, 233)"
+    },
+    {
+     "id": "model=gemini-3-pro\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-5)",
+     "cls": "",
+     "bg": "rgb(213, 81, 129)"
+    },
+    {
+     "id": "model=gpt-6.1\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+     "c": "var(--cpa-series-8)",
+     "cls": "",
+     "bg": "rgb(230, 103, 103)"
+    },
+    {
+     "id": "model=claude-sonnet-5-5\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+     "c": "var(--cpa-series-1)",
+     "cls": "",
+     "bg": "rgb(57, 135, 229)"
+    },
+    {
+     "id": "model=gpt-6.1-codex-2026-10-01\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-6)",
+     "cls": "",
+     "bg": "rgb(0, 131, 0)"
+    }
+   ],
+   "after": [
+    {
+     "id": "model=claude-sonnet-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-3)",
+     "cls": "",
+     "bg": "rgb(25, 158, 112)"
+    },
+    {
+     "id": "model=gpt-6.1\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-2)",
+     "cls": "",
+     "bg": "rgb(217, 89, 38)"
+    },
+    {
+     "id": "model=claude-opus-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-4)",
+     "cls": "",
+     "bg": "rgb(201, 133, 0)"
+    },
+    {
+     "id": "model=gemini-3-flash\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-7)",
+     "cls": "",
+     "bg": "rgb(144, 133, 233)"
+    },
+    {
+     "id": "model=gemini-3-pro\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-5)",
+     "cls": "",
+     "bg": "rgb(213, 81, 129)"
+    },
+    {
+     "id": "model=gpt-6.1\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+     "c": "var(--cpa-series-8)",
+     "cls": "",
+     "bg": "rgb(230, 103, 103)"
+    },
+    {
+     "id": "model=claude-sonnet-5-5\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+     "c": "var(--cpa-series-1)",
+     "cls": "",
+     "bg": "rgb(57, 135, 229)"
+    },
+    {
+     "id": "model=gpt-6.1-codex-2026-10-01\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+     "c": "var(--cpa-series-6)",
+     "cls": "",
+     "bg": "rgb(0, 131, 0)"
+    }
+   ],
+   "beforeAll": 21,
+   "afterAll": 21
+  },
+  {
+   "name": "dark theme full page rendered (palette #3987e5, host hidden, no crash)",
+   "pass": true,
+   "dataTheme": "dark",
+   "s1": "#3987e5",
+   "bg": "rgb(19, 19, 17)",
+   "height": 1421
+  },
+  {
+   "name": "light theme full page rendered (palette #2a78d6, host hidden, no crash)",
+   "pass": true,
+   "dataTheme": null,
+   "s1": "#2a78d6",
+   "bg": "rgb(250, 249, 245)",
+   "height": 1421
+  },
+  {
+   "name": "direct route #/dashboard?cpa-page=usage right after login x10: 0 error boundaries, overlay + data every run",
+   "pass": true,
+   "crashes": 0,
+   "ok": 10
+  },
+  {
+   "name": "no console errors attributed to usage.js",
+   "pass": true,
+   "usageErrs": [],
+   "allErrors": 0
+  }
+ ],
+ "console": [],
+ "usageRequests": [
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632245154,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632246230,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632246230,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632246231,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632246305,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249221,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249221,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249221,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249640,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249641,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632249641,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=requested_model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255359,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255360,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255360,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=requested_model,stream",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255729,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255730,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632255730,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=5&group=requested_model,stream",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256111,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256111,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256111,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=requested_model,stream",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256575,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256576,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632256576,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=requested_model,stream",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257040,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257040,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257040,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=requested_model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257498,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257499,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257499,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257856,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257857,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632257857,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258256,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258256,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258256,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=5&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258639,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258640,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632258640,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259080,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259080,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259080,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259521,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259521,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632259521,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260113,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260113,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260113,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260496,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260496,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260496,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260873,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260874,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632260874,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261243,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261243,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261243,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261895,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261896,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632261896,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632263753,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632263753,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632263753,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264151,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264151,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264151,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264557,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264557,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264557,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264954,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264954,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632264955,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265321,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265322,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265322,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&filter.provider=claude&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265952,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000&filter.provider=claude",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265952,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632265952,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266467,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266467,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266467,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266838,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266838,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632266838,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632267220,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632267220,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632267220,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269098,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269098,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269098,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "PUT",
+   "auth": true,
+   "body": "{\"prices\":{\"claude-opus-5-5\":{\"input\":15,\"cache_read\":1.5,\"cache_write\":18.75,\"output\":75},\"gpt-6.1\":{\"input\":1.25,\"cache_read\":0.125,\"cache_write\":0,\"output\":10},\"claude-sonnet-5-5\":{\"input\":3,\"cache_read\":0.3,\"cache_write\":3.75,\"output\":15}}}",
+   "at": 1793632269829,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269885,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269943,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269943,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632269943,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273198,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273198,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273198,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273570,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273570,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273570,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273934,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273934,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632273934,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274333,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274333,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274333,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274754,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274754,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274754,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274807,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274807,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274807,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274858,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274858,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274858,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274907,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274907,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274907,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274959,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274959,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632274959,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275005,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275005,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275005,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275057,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275057,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275057,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275105,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275105,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275105,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275156,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275156,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275156,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275207,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275207,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275207,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275255,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275255,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275255,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275318,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275319,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275319,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275364,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275364,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275364,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275413,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275413,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275413,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275464,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275464,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275464,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275513,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275513,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275513,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275586,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275586,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275586,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275648,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275648,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275648,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275715,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275715,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275715,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275780,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275780,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275780,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275847,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275847,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275847,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275947,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275947,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632275947,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276051,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276051,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276051,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276150,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276150,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276150,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276256,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276256,
+   "failure": "net::ERR_ABORTED"
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276256,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276370,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276370,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276370,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276515,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276515,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793610000&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276515,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276655,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276655,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276655,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276804,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276804,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276804,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276965,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276965,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632276965,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632277543,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632277543,
+   "status": 200
+  },
+  {
+   "ctx": "A-no-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632277543,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632286746,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288437,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288437,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288437,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288508,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288806,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288806,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1791039600&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632288806,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289200,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289200,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289200,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289571,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289571,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289571,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289937,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289937,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632289937,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632290304,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632290305,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632290305,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=20&group=model,api_key",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632295539,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632295539,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632295539,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632295547,
+   "status": 200
+  },
+  {
+   "ctx": "B-remember",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632295650,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632297055,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298047,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298047,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298047,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298115,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298408,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298408,
+   "status": 200
+  },
+  {
+   "ctx": "T-dark",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632298408,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632300929,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632301909,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632301909,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632301909,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632301986,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793026800&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632302287,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632302287,
+   "status": 200
+  },
+  {
+   "ctx": "T-light",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793026800&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632302287,
+   "status": 200
+  },
+  {
+   "ctx": "direct-0",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632304913,
+   "status": 200
+  },
+  {
+   "ctx": "direct-0",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632305064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-0",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632305064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-0",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632305064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-0",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632305131,
+   "status": 200
+  },
+  {
+   "ctx": "direct-1",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632309085,
+   "status": 200
+  },
+  {
+   "ctx": "direct-1",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632309219,
+   "status": 200
+  },
+  {
+   "ctx": "direct-1",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632309219,
+   "status": 200
+  },
+  {
+   "ctx": "direct-1",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632309219,
+   "status": 200
+  },
+  {
+   "ctx": "direct-1",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632309298,
+   "status": 200
+  },
+  {
+   "ctx": "direct-2",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632313339,
+   "status": 200
+  },
+  {
+   "ctx": "direct-2",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632313473,
+   "status": 200
+  },
+  {
+   "ctx": "direct-2",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632313473,
+   "status": 200
+  },
+  {
+   "ctx": "direct-2",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632313474,
+   "status": 200
+  },
+  {
+   "ctx": "direct-2",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632313551,
+   "status": 200
+  },
+  {
+   "ctx": "direct-3",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632317501,
+   "status": 200
+  },
+  {
+   "ctx": "direct-3",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632317615,
+   "status": 200
+  },
+  {
+   "ctx": "direct-3",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632317615,
+   "status": 200
+  },
+  {
+   "ctx": "direct-3",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632317616,
+   "status": 200
+  },
+  {
+   "ctx": "direct-3",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632317702,
+   "status": 200
+  },
+  {
+   "ctx": "direct-4",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632321763,
+   "status": 200
+  },
+  {
+   "ctx": "direct-4",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632321918,
+   "status": 200
+  },
+  {
+   "ctx": "direct-4",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632321918,
+   "status": 200
+  },
+  {
+   "ctx": "direct-4",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632321918,
+   "status": 200
+  },
+  {
+   "ctx": "direct-4",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632321982,
+   "status": 200
+  },
+  {
+   "ctx": "direct-5",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632325951,
+   "status": 200
+  },
+  {
+   "ctx": "direct-5",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632326064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-5",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632326064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-5",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632326064,
+   "status": 200
+  },
+  {
+   "ctx": "direct-5",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632326139,
+   "status": 200
+  },
+  {
+   "ctx": "direct-6",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632330167,
+   "status": 200
+  },
+  {
+   "ctx": "direct-6",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632330288,
+   "status": 200
+  },
+  {
+   "ctx": "direct-6",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632330288,
+   "status": 200
+  },
+  {
+   "ctx": "direct-6",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632330288,
+   "status": 200
+  },
+  {
+   "ctx": "direct-6",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632330358,
+   "status": 200
+  },
+  {
+   "ctx": "direct-7",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632334348,
+   "status": 200
+  },
+  {
+   "ctx": "direct-7",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632334494,
+   "status": 200
+  },
+  {
+   "ctx": "direct-7",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632334494,
+   "status": 200
+  },
+  {
+   "ctx": "direct-7",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632334494,
+   "status": 200
+  },
+  {
+   "ctx": "direct-7",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632334577,
+   "status": 200
+  },
+  {
+   "ctx": "direct-8",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632338458,
+   "status": 200
+  },
+  {
+   "ctx": "direct-8",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632338590,
+   "status": 200
+  },
+  {
+   "ctx": "direct-8",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632338590,
+   "status": 200
+  },
+  {
+   "ctx": "direct-8",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632338590,
+   "status": 200
+  },
+  {
+   "ctx": "direct-8",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632338667,
+   "status": 200
+  },
+  {
+   "ctx": "direct-9",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/api-keys",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632342578,
+   "status": 200
+  },
+  {
+   "ctx": "direct-9",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1793545200&to=1793635200&bucket=hour&limit=10&group=provider",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632342709,
+   "status": 200
+  },
+  {
+   "ctx": "direct-9",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632342709,
+   "status": 200
+  },
+  {
+   "ctx": "direct-9",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1793545200&to=1793635200",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632342709,
+   "status": 200
+  },
+  {
+   "ctx": "direct-9",
+   "url": "http://127.0.0.1:41736/v8/management/observability/usage/prices",
+   "method": "GET",
+   "auth": true,
+   "at": 1793632342779,
+   "status": 200
+  }
+ ],
+ "totals": {
+  "pageDailyTableSums": {
+   "claude": {
+    "requests": 1185,
+    "failures": 38,
+    "tokens": 44183665,
+    "cost": 212.62999999999997
+   },
+   "codex": {
+    "requests": 937,
+    "failures": 34,
+    "tokens": 36983862,
+    "cost": 29.03
+   },
+   "gemini": {
+    "requests": 878,
+    "failures": 38,
+    "tokens": 36648174,
+    "cost": 0
+   },
+   "Total": {
+    "requests": 3000,
+    "failures": 110,
+    "tokens": 117815701,
+    "cost": 241.64999999999998
+   }
+  },
+  "pageProviderBreakdown": [
+   [
+    "claude",
+    "1,185",
+    "38",
+    "44,183,665",
+    "40,528,337",
+    "3,655,328",
+    "28,303,716",
+    "22 s",
+    "$212.63"
+   ],
+   [
+    "codex",
+    "937",
+    "34",
+    "36,983,862",
+    "34,180,786",
+    "2,803,076",
+    "22,111,360",
+    "22.4 s",
+    "$29.03"
+   ],
+   [
+    "gemini",
+    "878",
+    "38",
+    "36,648,174",
+    "33,986,230",
+    "2,661,944",
+    "20,948,188",
+    "20.9 s",
+    "$0.00"
+   ]
+  ],
+  "table": [
+   {
+    "scope": "total",
+    "seed": [
+     3000,
+     110,
+     117815701,
+     241.67
+    ],
+    "api": [
+     3000,
+     110,
+     117815701,
+     241.67
+    ],
+    "page": [
+     3000,
+     110,
+     117815701,
+     241.67
+    ],
+    "pageNote": "requests/failures/tokens = sum of provider breakdown rows; cost = cost tile",
+    "pageTiles": [
+     "3k",
+     "110",
+     "118M",
+     "109M / 9.1M",
+     "21.8 s",
+     "2.64 s",
+     "$241.67"
+    ]
+   },
+   {
+    "scope": "claude",
+    "seed": [
+     1185,
+     38,
+     44183665,
+     212.63
+    ],
+    "api": [
+     1185,
+     38,
+     44183665,
+     212.63
+    ],
+    "page": [
+     1185,
+     38,
+     44183665,
+     212.63
+    ],
+    "pageDailySum": [
+     1185,
+     38,
+     44183665,
+     212.63
+    ]
+   },
+   {
+    "scope": "codex",
+    "seed": [
+     937,
+     34,
+     36983862,
+     29.03
+    ],
+    "api": [
+     937,
+     34,
+     36983862,
+     29.03
+    ],
+    "page": [
+     937,
+     34,
+     36983862,
+     29.03
+    ],
+    "pageDailySum": [
+     937,
+     34,
+     36983862,
+     29.03
+    ]
+   },
+   {
+    "scope": "gemini",
+    "seed": [
+     878,
+     38,
+     36648174,
+     0
+    ],
+    "api": [
+     878,
+     38,
+     36648174,
+     0
+    ],
+    "page": [
+     878,
+     38,
+     36648174,
+     0
+    ],
+    "pageDailySum": [
+     878,
+     38,
+     36648174,
+     0
+    ]
+   }
+  ]
+ },
+ "topN": {
+  "requested_model+stream": {
+   "5": {
+    "limitParam": 5,
+    "legend": 6,
+    "named": 5,
+    "other": 1,
+    "hatchedSwatches": 0,
+    "patterns": 0,
+    "hatchedFills": 0,
+    "distinctStyles": 5
+   },
+   "10": {
+    "limitParam": 10,
+    "legend": 11,
+    "named": 10,
+    "other": 1,
+    "hatchedSwatches": 2,
+    "patterns": 2,
+    "hatchedFills": 2,
+    "distinctStyles": 10
+   },
+   "20": {
+    "limitParam": 20,
+    "legend": 18,
+    "named": 18,
+    "other": 0,
+    "hatchedSwatches": 10,
+    "patterns": 10,
+    "hatchedFills": 10,
+    "distinctStyles": 18
+   }
+  },
+  "model+api_key": {
+   "5": {
+    "limitParam": 5,
+    "legend": 6,
+    "named": 5,
+    "other": 1,
+    "hatchedSwatches": 0,
+    "patterns": 0,
+    "hatchedFills": 0,
+    "distinctStyles": 5
+   },
+   "10": {
+    "limitParam": 10,
+    "legend": 11,
+    "named": 10,
+    "other": 1,
+    "hatchedSwatches": 2,
+    "patterns": 2,
+    "hatchedFills": 2,
+    "distinctStyles": 10
+   },
+   "20": {
+    "limitParam": 20,
+    "legend": 21,
+    "named": 20,
+    "other": 1,
+    "hatchedSwatches": 12,
+    "patterns": 12,
+    "hatchedFills": 12,
+    "distinctStyles": 20
+   }
+  }
+ },
+ "directRoute": {
+  "crashes": 0,
+  "runs": [
+   {
+    "run": 0,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 1,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 2,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 3,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 4,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 5,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 6,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 7,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 8,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   },
+   {
+    "run": 9,
+    "boundaries": 0,
+    "overlay": true,
+    "data": true,
+    "host": "hidden/absolute/inset(50%)",
+    "hits": [
+     "section",
+     "section",
+     "section"
+    ],
+    "consoleErrors": 0,
+    "hash": "#/dashboard?cpa-page=usage&cpa-range=24h"
+   }
+  ]
+ },
+ "cancelled": {
+  "since": "2026-11-02T15:11:14.705Z",
+  "browser": {
+   "requests": 90,
+   "aborted": 54,
+   "abortedSample": [
+    {
+     "url": "/v8/management/observability/usage/series?from=1793628000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/summary?from=1793628000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/dimensions?from=1793628000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/series?from=1793610000&to=1793635200&bucket=hour&limit=10&group=model,api_key",
+     "failure": "net::ERR_ABORTED"
+    },
+    {
+     "url": "/v8/management/observability/usage/summary?from=1793610000&to=1793635200",
+     "failure": "net::ERR_ABORTED"
+    }
+   ],
+   "finalHash": "#/dashboard?cpa-page=usage&cpa-range=30d",
+   "lastSeries": "/v8/management/observability/usage/series?from=1791039600&to=1793635200&bucket=hour&limit=10&group=model,api_key"
+  }
+ },
+ "serverLogOffsetAtStart": 6572,
+ "lang": "en",
+ "navFrames": {
+  "count": 150,
+  "mounted": 93,
+  "first": [
+   {
+    "t": 1,
+    "cpa": null,
+    "overlay": false,
+    "hostHidden": false,
+    "hostPx": null,
+    "top": null,
+    "h1": null,
+    "tiles": null,
+    "crashed": false
+   },
+   {
+    "t": 17,
+    "cpa": null,
+    "overlay": false,
+    "hostHidden": false,
+    "hostPx": null,
+    "top": null,
+    "h1": null,
+    "tiles": null,
+    "crashed": false
+   },
+   {
+    "t": 34,
+    "cpa": null,
+    "overlay": false,
+    "hostHidden": false,
+    "hostPx": null,
+    "top": null,
+    "h1": null,
+    "tiles": null,
+    "crashed": false
+   },
+   {
+    "t": 50,
+    "cpa": null,
+    "overlay": false,
+    "hostHidden": false,
+    "hostPx": null,
+    "top": null,
+    "h1": null,
+    "tiles": null,
+    "crashed": false
+   }
+  ],
+  "tops": [
+   78
+  ],
+  "h1s": [
+   78
+  ],
+  "tilesTops": [
+   201
+  ]
+ },
+ "probeAfterNav": {
+  "hash": "#/dashboard?cpa-page=usage&cpa-range=24h",
+  "crashed": false,
+  "overlay": true,
+  "cpaPage": "usage",
+  "host": "hidden/absolute/inset(50%)",
+  "hostVisible": false,
+  "hits": [
+   "section",
+   "section",
+   "section"
+  ],
+  "sectionTop": 78,
+  "sectionHeight": 1260,
+  "scroll": [
+   0,
+   1378,
+   1000
+  ],
+  "loginForm": false,
+  "status": "Updated 10:10:46 AM",
+  "activeNav": [
+   "#/dashboard?cpa-page=usage"
+  ],
+  "mainChildren": 2,
+  "mainText": 1568
+ },
+ "queries30d": {
+  "serURL": "http://127.0.0.1:41736/v8/management/observability/usage/series?from=1790985600&to=1793664000&bucket=day&limit=10&group=provider",
+  "sumURL": "http://127.0.0.1:41736/v8/management/observability/usage/summary?from=1790985600&to=1793664000",
+  "dimURL": "http://127.0.0.1:41736/v8/management/observability/usage/dimensions?from=1790985600&to=1793664000"
+ },
+ "tiles30d": {
+  "page": [
+   [
+    "Requests",
+    "3k",
+    ""
+   ],
+   [
+    "Failures",
+    "110",
+    "3.7% of requests"
+   ],
+   [
+    "Total tokens",
+    "118M",
+    "71.4M cache read"
+   ],
+   [
+    "Input / output",
+    "109M / 9.1M",
+    "3.3M reasoning"
+   ],
+   [
+    "Avg latency",
+    "21.8 s",
+    "Max 45.2 s"
+   ],
+   [
+    "Avg TTFT",
+    "2.64 s",
+    "1.8k measured"
+   ],
+   [
+    "Estimated cost",
+    "$241.67",
+    "4 models unpriced"
+   ]
+  ],
+  "expected": [
+   [
+    "Requests",
+    "3k",
+    ""
+   ],
+   [
+    "Failures",
+    "110",
+    "3.7% of requests"
+   ],
+   [
+    "Total tokens",
+    "118M",
+    "71.4M cache read"
+   ],
+   [
+    "Input / output",
+    "109M / 9.1M",
+    "3.3M reasoning"
+   ],
+   [
+    "Avg latency",
+    "21.8 s",
+    "Max 45.2 s"
+   ],
+   [
+    "Avg TTFT",
+    "2.64 s",
+    "1.8k measured"
+   ],
+   [
+    "Estimated cost",
+    "$241.67",
+    "4 models unpriced"
+   ]
+  ]
+ },
+ "providerDaily": {
+  "requests": {
+   "head": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "nonZeroRows": [
+    [
+     "Oct 26 (UTC)",
+     "48",
+     "50",
+     "56",
+     "154"
+    ],
+    [
+     "Oct 27 (UTC)",
+     "168",
+     "144",
+     "124",
+     "436"
+    ],
+    [
+     "Oct 28 (UTC)",
+     "164",
+     "131",
+     "139",
+     "434"
+    ],
+    [
+     "Oct 29 (UTC)",
+     "167",
+     "137",
+     "112",
+     "416"
+    ],
+    [
+     "Oct 30 (UTC)",
+     "194",
+     "125",
+     "120",
+     "439"
+    ],
+    [
+     "Oct 31 (UTC)",
+     "183",
+     "134",
+     "116",
+     "433"
+    ],
+    [
+     "Nov 1 (UTC)",
+     "170",
+     "138",
+     "145",
+     "453"
+    ],
+    [
+     "Nov 2 (UTC)",
+     "91",
+     "78",
+     "66",
+     "235"
+    ]
+   ]
+  },
+  "failures": {
+   "head": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "nonZeroRows": [
+    [
+     "Oct 26 (UTC)",
+     "2",
+     "3",
+     "0",
+     "5"
+    ],
+    [
+     "Oct 27 (UTC)",
+     "6",
+     "5",
+     "6",
+     "17"
+    ],
+    [
+     "Oct 28 (UTC)",
+     "4",
+     "10",
+     "8",
+     "22"
+    ],
+    [
+     "Oct 29 (UTC)",
+     "5",
+     "0",
+     "3",
+     "8"
+    ],
+    [
+     "Oct 30 (UTC)",
+     "2",
+     "5",
+     "8",
+     "15"
+    ],
+    [
+     "Oct 31 (UTC)",
+     "7",
+     "6",
+     "5",
+     "18"
+    ],
+    [
+     "Nov 1 (UTC)",
+     "8",
+     "4",
+     "4",
+     "16"
+    ],
+    [
+     "Nov 2 (UTC)",
+     "4",
+     "1",
+     "4",
+     "9"
+    ]
+   ]
+  },
+  "tokens": {
+   "head": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "nonZeroRows": [
+    [
+     "Oct 26 (UTC)",
+     "2,048,180",
+     "2,450,587",
+     "2,146,066",
+     "6,644,833"
+    ],
+    [
+     "Oct 27 (UTC)",
+     "5,965,851",
+     "5,971,466",
+     "5,361,107",
+     "17,298,424"
+    ],
+    [
+     "Oct 28 (UTC)",
+     "6,523,910",
+     "5,043,178",
+     "6,307,266",
+     "17,874,354"
+    ],
+    [
+     "Oct 29 (UTC)",
+     "6,404,058",
+     "4,850,421",
+     "4,567,450",
+     "15,821,929"
+    ],
+    [
+     "Oct 30 (UTC)",
+     "7,111,530",
+     "5,270,183",
+     "4,740,518",
+     "17,122,231"
+    ],
+    [
+     "Oct 31 (UTC)",
+     "6,511,896",
+     "5,204,993",
+     "4,940,349",
+     "16,657,238"
+    ],
+    [
+     "Nov 1 (UTC)",
+     "6,227,733",
+     "5,568,936",
+     "6,137,787",
+     "17,934,456"
+    ],
+    [
+     "Nov 2 (UTC)",
+     "3,390,507",
+     "2,624,098",
+     "2,447,631",
+     "8,462,236"
+    ]
+   ]
+  },
+  "cost": {
+   "head": [
+    "Time",
+    "claude",
+    "codex",
+    "gemini",
+    "Total"
+   ],
+   "nonZeroRows": [
+    [
+     "Oct 26 (UTC)",
+     "$9.50",
+     "$1.74",
+     "$0.00",
+     "$11.24"
+    ],
+    [
+     "Oct 27 (UTC)",
+     "$31.74",
+     "$4.08",
+     "$0.00",
+     "$35.81"
+    ],
+    [
+     "Oct 28 (UTC)",
+     "$28.02",
+     "$4.20",
+     "$0.00",
+     "$32.22"
+    ],
+    [
+     "Oct 29 (UTC)",
+     "$31.94",
+     "$4.55",
+     "$0.00",
+     "$36.49"
+    ],
+    [
+     "Oct 30 (UTC)",
+     "$35.12",
+     "$3.67",
+     "$0.00",
+     "$38.79"
+    ],
+    [
+     "Oct 31 (UTC)",
+     "$30.14",
+     "$4.25",
+     "$0.00",
+     "$34.39"
+    ],
+    [
+     "Nov 1 (UTC)",
+     "$30.07",
+     "$4.16",
+     "$0.00",
+     "$34.23"
+    ],
+    [
+     "Nov 2 (UTC)",
+     "$16.10",
+     "$2.38",
+     "$0.00",
+     "$18.48"
+    ]
+   ]
+  }
+ },
+ "csv_requests": {
+  "filename": "cpa-usage-requests-provider-2026100300.csv",
+  "head": [
+   "bucket_start_utc",
+   "claude",
+   "codex",
+   "gemini",
+   "total"
+  ],
+  "rows": 31
+ },
+ "csv_cost": {
+  "filename": "cpa-usage-cost-provider-2026100300.csv",
+  "head": [
+   "bucket_start_utc",
+   "claude",
+   "codex",
+   "gemini",
+   "total"
+  ],
+  "rows": 31
+ },
+ "apiKeyTable": [
+  [
+   "sk-…f80",
+   "1,238",
+   "42",
+   "48,057,238",
+   "44,195,138",
+   "3,862,100",
+   "29,091,701",
+   "21.5 s",
+   "$106.60"
+  ],
+  [
+   "sk-…397",
+   "744",
+   "31",
+   "29,085,005",
+   "26,835,149",
+   "2,249,856",
+   "17,330,562",
+   "22.3 s",
+   "$60.38"
+  ],
+  [
+   "sk-…3e5",
+   "578",
+   "27",
+   "22,174,801",
+   "20,478,926",
+   "1,695,875",
+   "13,316,613",
+   "21.4 s",
+   "$43.82"
+  ],
+  [
+   "(none)",
+   "440",
+   "10",
+   "18,498,657",
+   "17,186,140",
+   "1,312,517",
+   "11,624,388",
+   "22.4 s",
+   "$30.87"
+  ]
+ ],
+ "controlChanges": [
+  {
+   "name": "metric tokens->requests",
+   "changed": true,
+   "after": {
+    "bars": 3,
+    "lines": 0,
+    "areas": 0,
+    "title": "Requests by Provider"
+   }
+  },
+  {
+   "name": "group provider->model",
+   "changed": true,
+   "after": {
+    "bars": 6,
+    "lines": 0,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "type stacked->grouped",
+   "changed": true,
+   "after": {
+    "bars": 6,
+    "lines": 0,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "type grouped->area",
+   "changed": true,
+   "after": {
+    "bars": 0,
+    "lines": 6,
+    "areas": 6,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "type area->lines",
+   "changed": true,
+   "after": {
+    "bars": 0,
+    "lines": 6,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "scale linear->log",
+   "changed": true,
+   "after": {
+    "bars": 0,
+    "lines": 6,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "bucket day->hour",
+   "changed": true,
+   "after": {
+    "bars": 6,
+    "lines": 0,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  },
+  {
+   "name": "range 30d->7d",
+   "changed": true,
+   "after": {
+    "bars": 6,
+    "lines": 0,
+    "areas": 0,
+    "title": "Requests by Model"
+   }
+  }
+ ],
+ "unpriced": {
+  "legend": [
+   {
+    "label": "claude-sonnet-5-5",
+    "note": "unpriced"
+   },
+   {
+    "label": "gpt-6.1",
+    "note": ""
+   },
+   {
+    "label": "claude-opus-5-5",
+    "note": ""
+   },
+   {
+    "label": "gemini-3-flash",
+    "note": "unpriced"
+   },
+   {
+    "label": "gemini-3-pro",
+    "note": "unpriced"
+   },
+   {
+    "label": "gpt-6.1-codex-2026-10-01",
+    "note": "unpriced"
+   }
+  ],
+  "costCells": [
+   [
+    "claude-sonnet-5-5",
+    "unpriced",
+    "cpa-u-unpriced"
+   ],
+   [
+    "gpt-6.1",
+    "$29.03",
+    ""
+   ],
+   [
+    "claude-opus-5-5",
+    "$212.63",
+    ""
+   ],
+   [
+    "gemini-3-flash",
+    "unpriced",
+    "cpa-u-unpriced"
+   ],
+   [
+    "gemini-3-pro",
+    "unpriced",
+    "cpa-u-unpriced"
+   ],
+   [
+    "gpt-6.1-codex-2026-10-01",
+    "unpriced",
+    "cpa-u-unpriced"
+   ]
+  ],
+  "costTile": [
+   "Estimated cost",
+   "$241.67",
+   "4 models unpriced"
+  ]
+ },
+ "priceEdit": {
+  "putStatus": 200,
+  "putBody": {
+   "prices": {
+    "claude-opus-5-5": {
+     "input": 15,
+     "cache_read": 1.5,
+     "cache_write": 18.75,
+     "output": 75
+    },
+    "gpt-6.1": {
+     "input": 1.25,
+     "cache_read": 0.125,
+     "cache_write": 0,
+     "output": 10
+    },
+    "claude-sonnet-5-5": {
+     "input": 3,
+     "cache_read": 0.3,
+     "cache_write": 3.75,
+     "output": 15
+    }
+   }
+  },
+  "tileBefore": [
+   "Estimated cost",
+   "$241.67",
+   "4 models unpriced"
+  ],
+  "tileAfter": [
+   "Estimated cost",
+   "$299.85",
+   "3 models unpriced"
+  ],
+  "sonnetCost": 58.1879946,
+  "expectCost": 299.85395509999995,
+  "apiCost": 299.8539551,
+  "pricesAfter": {
+   "claude-opus-5-5": {
+    "input": 15,
+    "cache_read": 1.5,
+    "cache_write": 18.75,
+    "output": 75
+   },
+   "claude-sonnet-5-5": {
+    "input": 3,
+    "cache_read": 0.3,
+    "cache_write": 3.75,
+    "output": 15
+   },
+   "gpt-6.1": {
+    "input": 1.25,
+    "cache_read": 0.125,
+    "cache_write": 0,
+    "output": 10
+   }
+  },
+  "afterReload": {
+   "reloadsBeforePut": 0,
+   "reloadsAfterPut": 1,
+   "reloaded": true,
+   "pricesReload": {
+    "claude-opus-5-5": {
+     "input": 15,
+     "cache_read": 1.5,
+     "cache_write": 18.75,
+     "output": 75
+    },
+    "claude-sonnet-5-5": {
+     "input": 3,
+     "cache_read": 0.3,
+     "cache_write": 3.75,
+     "output": 15
+    },
+    "gpt-6.1": {
+     "input": 1.25,
+     "cache_read": 0.125,
+     "cache_write": 0,
+     "output": 10
+    }
+   },
+   "apiCost": 299.8539551,
+   "tileReload": [
+    "Estimated cost",
+    "$299.85",
+    "3 models unpriced"
+   ]
+  }
+ },
+ "hostPages": {
+  "logs": {
+   "hash": "#/logs",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    1000,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/logs"
+   ],
+   "mainChildren": 1,
+   "mainText": 357
+  },
+  "quota": {
+   "hash": "#/quota",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    1000,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/quota"
+   ],
+   "mainChildren": 1,
+   "mainText": 288
+  },
+  "dashboard": {
+   "hash": "#/",
+   "crashed": false,
+   "overlay": false,
+   "cpaPage": null,
+   "host": "visible/relative/none",
+   "hostVisible": true,
+   "hits": [],
+   "sectionTop": null,
+   "sectionHeight": null,
+   "scroll": [
+    0,
+    2317,
+    1000
+   ],
+   "loginForm": false,
+   "status": null,
+   "activeNav": [
+    "#/"
+   ],
+   "mainChildren": 1,
+   "mainText": 1376
+  }
+ },
+ "colours": {
+  "before": [
+   {
+    "id": "model=claude-sonnet-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-3)",
+    "cls": "",
+    "bg": "rgb(25, 158, 112)"
+   },
+   {
+    "id": "model=gpt-6.1\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-2)",
+    "cls": "",
+    "bg": "rgb(217, 89, 38)"
+   },
+   {
+    "id": "model=claude-opus-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-4)",
+    "cls": "",
+    "bg": "rgb(201, 133, 0)"
+   },
+   {
+    "id": "model=gemini-3-flash\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-7)",
+    "cls": "",
+    "bg": "rgb(144, 133, 233)"
+   },
+   {
+    "id": "model=gemini-3-pro\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-5)",
+    "cls": "",
+    "bg": "rgb(213, 81, 129)"
+   },
+   {
+    "id": "model=gpt-6.1\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+    "c": "var(--cpa-series-8)",
+    "cls": "",
+    "bg": "rgb(230, 103, 103)"
+   },
+   {
+    "id": "model=claude-sonnet-5-5\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+    "c": "var(--cpa-series-1)",
+    "cls": "",
+    "bg": "rgb(57, 135, 229)"
+   },
+   {
+    "id": "model=gpt-6.1-codex-2026-10-01\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-6)",
+    "cls": "",
+    "bg": "rgb(0, 131, 0)"
+   }
+  ],
+  "after": [
+   {
+    "id": "model=claude-sonnet-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-3)",
+    "cls": "",
+    "bg": "rgb(25, 158, 112)"
+   },
+   {
+    "id": "model=gpt-6.1\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-2)",
+    "cls": "",
+    "bg": "rgb(217, 89, 38)"
+   },
+   {
+    "id": "model=claude-opus-5-5\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-4)",
+    "cls": "",
+    "bg": "rgb(201, 133, 0)"
+   },
+   {
+    "id": "model=gemini-3-flash\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-7)",
+    "cls": "",
+    "bg": "rgb(144, 133, 233)"
+   },
+   {
+    "id": "model=gemini-3-pro\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-5)",
+    "cls": "",
+    "bg": "rgb(213, 81, 129)"
+   },
+   {
+    "id": "model=gpt-6.1\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+    "c": "var(--cpa-series-8)",
+    "cls": "",
+    "bg": "rgb(230, 103, 103)"
+   },
+   {
+    "id": "model=claude-sonnet-5-5\u001fapi_key=c3dace2bc1af0cb286ddf5f12ad4cf0d7adc19c8c896869e70d4aade4562bb2a",
+    "c": "var(--cpa-series-1)",
+    "cls": "",
+    "bg": "rgb(57, 135, 229)"
+   },
+   {
+    "id": "model=gpt-6.1-codex-2026-10-01\u001fapi_key=6144b0e3f5fb330b618b1fe9732d24a08cec6301e6753e2447c30977bf1b61b6",
+    "c": "var(--cpa-series-6)",
+    "cls": "",
+    "bg": "rgb(0, 131, 0)"
+   }
+  ],
+  "beforeAll": 21,
+  "afterAll": 21
+ },
+ "finishedAt": "2026-11-02T15:12:25.761Z",
+ "summary": {
+  "pass": 68,
+  "fail": 0
+ }
+}

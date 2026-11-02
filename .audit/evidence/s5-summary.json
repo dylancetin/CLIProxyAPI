@@ -1,0 +1,983 @@
+{
+  "dimensions": {
+    "account": [
+      "claude-alpha.json",
+      "claude-bravo.json",
+      "s5-compat-main.json"
+    ],
+    "api_key": [
+      {
+        "value": "e904b9c33505e898f7565399b3e06ad7be81415e8bb0e35399e066b38859bed2",
+        "hint": "sk-s…4f60"
+      },
+      {
+        "value": "f58f52ae80b5f57a85b9a927baade5ccf2d7a8e2d9040dcbcf11e0c620271138",
+        "hint": "sk-s…3e71"
+      }
+    ],
+    "model": [
+      "s5-claude-haiku",
+      "s5-claude-opus",
+      "s5-compat-large",
+      "s5-compat-small"
+    ],
+    "provider": [
+      "claude",
+      "s5-compat"
+    ],
+    "reasoning_effort": [
+      ""
+    ],
+    "requested_model": [
+      "s5-claude-haiku",
+      "s5-claude-opus",
+      "s5-compat-large",
+      "s5-compat-small"
+    ],
+    "service_tier": [
+      "auto"
+    ],
+    "stream": [
+      "stream",
+      "sync"
+    ]
+  },
+  "prices_after_reload": {
+    "prices": {
+      "s5-claude-opus": {
+        "input": 3,
+        "cache_read": 0.3,
+        "cache_write": 3.75,
+        "output": 15
+      }
+    }
+  },
+  "put_prices": {
+    "prices": {
+      "s5-claude-opus": {
+        "input": 3,
+        "cache_read": 0.3,
+        "cache_write": 3.75,
+        "output": 15
+      }
+    }
+  },
+  "summary": {
+    "total": {
+      "requests": 18,
+      "failures": 6,
+      "tokens": {
+        "input_uncached": 2318,
+        "input_cache_read": 220,
+        "input_cache_write": 165,
+        "output_reasoning": 55,
+        "output_other": 962,
+        "unclassified": 0,
+        "total": 3720
+      },
+      "latency_ms_sum": 0,
+      "latency_ms_max": 0,
+      "ttft_ms_sum": 0,
+      "ttft_ms_max": 0,
+      "ttft_count": 0,
+      "cost_usd": 0
+    },
+    "by": {
+      "account": [
+        {
+          "value": "s5-compat-main.json",
+          "point": {
+            "requests": 7,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 1202,
+              "input_cache_read": 60,
+              "input_cache_write": 0,
+              "output_reasoning": 55,
+              "output_other": 528,
+              "unclassified": 0,
+              "total": 1845
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "claude-alpha.json",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 673,
+              "input_cache_read": 120,
+              "input_cache_write": 75,
+              "output_reasoning": 0,
+              "output_other": 267,
+              "unclassified": 0,
+              "total": 1135
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "claude-bravo.json",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 443,
+              "input_cache_read": 40,
+              "input_cache_write": 90,
+              "output_reasoning": 0,
+              "output_other": 167,
+              "unclassified": 0,
+              "total": 740
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "value": "e904b9c33505e898f7565399b3e06ad7be81415e8bb0e35399e066b38859bed2",
+          "hint": "sk-s…4f60",
+          "point": {
+            "requests": 10,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 1428,
+              "input_cache_read": 160,
+              "input_cache_write": 75,
+              "output_reasoning": 30,
+              "output_other": 602,
+              "unclassified": 0,
+              "total": 2295
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "f58f52ae80b5f57a85b9a927baade5ccf2d7a8e2d9040dcbcf11e0c620271138",
+          "hint": "sk-s…3e71",
+          "point": {
+            "requests": 8,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 890,
+              "input_cache_read": 60,
+              "input_cache_write": 90,
+              "output_reasoning": 25,
+              "output_other": 360,
+              "unclassified": 0,
+              "total": 1425
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "model": [
+        {
+          "value": "s5-compat-large",
+          "point": {
+            "requests": 4,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 677,
+              "input_cache_read": 40,
+              "input_cache_write": 0,
+              "output_reasoning": 20,
+              "output_other": 293,
+              "unclassified": 0,
+              "total": 1030
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-opus",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 569,
+              "input_cache_read": 80,
+              "input_cache_write": 105,
+              "output_reasoning": 0,
+              "output_other": 211,
+              "unclassified": 0,
+              "total": 965
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-haiku",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 547,
+              "input_cache_read": 80,
+              "input_cache_write": 60,
+              "output_reasoning": 0,
+              "output_other": 223,
+              "unclassified": 0,
+              "total": 910
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-compat-small",
+          "point": {
+            "requests": 3,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 525,
+              "input_cache_read": 20,
+              "input_cache_write": 0,
+              "output_reasoning": 35,
+              "output_other": 235,
+              "unclassified": 0,
+              "total": 815
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "provider": [
+        {
+          "value": "claude",
+          "point": {
+            "requests": 11,
+            "failures": 4,
+            "tokens": {
+              "input_uncached": 1116,
+              "input_cache_read": 160,
+              "input_cache_write": 165,
+              "output_reasoning": 0,
+              "output_other": 434,
+              "unclassified": 0,
+              "total": 1875
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-compat",
+          "point": {
+            "requests": 7,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 1202,
+              "input_cache_read": 60,
+              "input_cache_write": 0,
+              "output_reasoning": 55,
+              "output_other": 528,
+              "unclassified": 0,
+              "total": 1845
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "reasoning_effort": [
+        {
+          "value": "",
+          "point": {
+            "requests": 18,
+            "failures": 6,
+            "tokens": {
+              "input_uncached": 2318,
+              "input_cache_read": 220,
+              "input_cache_write": 165,
+              "output_reasoning": 55,
+              "output_other": 962,
+              "unclassified": 0,
+              "total": 3720
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "requested_model": [
+        {
+          "value": "s5-compat-large",
+          "point": {
+            "requests": 4,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 677,
+              "input_cache_read": 40,
+              "input_cache_write": 0,
+              "output_reasoning": 20,
+              "output_other": 293,
+              "unclassified": 0,
+              "total": 1030
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-opus",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 569,
+              "input_cache_read": 80,
+              "input_cache_write": 105,
+              "output_reasoning": 0,
+              "output_other": 211,
+              "unclassified": 0,
+              "total": 965
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-haiku",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 547,
+              "input_cache_read": 80,
+              "input_cache_write": 60,
+              "output_reasoning": 0,
+              "output_other": 223,
+              "unclassified": 0,
+              "total": 910
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-compat-small",
+          "point": {
+            "requests": 3,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 525,
+              "input_cache_read": 20,
+              "input_cache_write": 0,
+              "output_reasoning": 35,
+              "output_other": 235,
+              "unclassified": 0,
+              "total": 815
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "service_tier": [
+        {
+          "value": "auto",
+          "point": {
+            "requests": 18,
+            "failures": 6,
+            "tokens": {
+              "input_uncached": 2318,
+              "input_cache_read": 220,
+              "input_cache_write": 165,
+              "output_reasoning": 55,
+              "output_other": 962,
+              "unclassified": 0,
+              "total": 3720
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "stream": [
+        {
+          "value": "sync",
+          "point": {
+            "requests": 10,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 1441,
+              "input_cache_read": 120,
+              "input_cache_write": 90,
+              "output_reasoning": 40,
+              "output_other": 609,
+              "unclassified": 0,
+              "total": 2300
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "stream",
+          "point": {
+            "requests": 8,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 877,
+              "input_cache_read": 100,
+              "input_cache_write": 75,
+              "output_reasoning": 15,
+              "output_other": 353,
+              "unclassified": 0,
+              "total": 1420
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ]
+    }
+  },
+  "summary_priced_after_reload": {
+    "total": {
+      "requests": 18,
+      "failures": 6,
+      "tokens": {
+        "input_uncached": 2318,
+        "input_cache_read": 220,
+        "input_cache_write": 165,
+        "output_reasoning": 55,
+        "output_other": 962,
+        "unclassified": 0,
+        "total": 3720
+      },
+      "latency_ms_sum": 0,
+      "latency_ms_max": 0,
+      "ttft_ms_sum": 0,
+      "ttft_ms_max": 0,
+      "ttft_count": 0,
+      "cost_usd": 0.00528975
+    },
+    "by": {
+      "account": [
+        {
+          "value": "s5-compat-main.json",
+          "point": {
+            "requests": 7,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 1202,
+              "input_cache_read": 60,
+              "input_cache_write": 0,
+              "output_reasoning": 55,
+              "output_other": 528,
+              "unclassified": 0,
+              "total": 1845
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "claude-alpha.json",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 673,
+              "input_cache_read": 120,
+              "input_cache_write": 75,
+              "output_reasoning": 0,
+              "output_other": 267,
+              "unclassified": 0,
+              "total": 1135
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00240075
+          }
+        },
+        {
+          "value": "claude-bravo.json",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 443,
+              "input_cache_read": 40,
+              "input_cache_write": 90,
+              "output_reasoning": 0,
+              "output_other": 167,
+              "unclassified": 0,
+              "total": 740
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.002889
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "value": "e904b9c33505e898f7565399b3e06ad7be81415e8bb0e35399e066b38859bed2",
+          "hint": "sk-s…4f60",
+          "point": {
+            "requests": 10,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 1428,
+              "input_cache_read": 160,
+              "input_cache_write": 75,
+              "output_reasoning": 30,
+              "output_other": 602,
+              "unclassified": 0,
+              "total": 2295
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00240075
+          }
+        },
+        {
+          "value": "f58f52ae80b5f57a85b9a927baade5ccf2d7a8e2d9040dcbcf11e0c620271138",
+          "hint": "sk-s…3e71",
+          "point": {
+            "requests": 8,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 890,
+              "input_cache_read": 60,
+              "input_cache_write": 90,
+              "output_reasoning": 25,
+              "output_other": 360,
+              "unclassified": 0,
+              "total": 1425
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.002889
+          }
+        }
+      ],
+      "model": [
+        {
+          "value": "s5-compat-large",
+          "point": {
+            "requests": 4,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 677,
+              "input_cache_read": 40,
+              "input_cache_write": 0,
+              "output_reasoning": 20,
+              "output_other": 293,
+              "unclassified": 0,
+              "total": 1030
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-opus",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 569,
+              "input_cache_read": 80,
+              "input_cache_write": 105,
+              "output_reasoning": 0,
+              "output_other": 211,
+              "unclassified": 0,
+              "total": 965
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00528975
+          }
+        },
+        {
+          "value": "s5-claude-haiku",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 547,
+              "input_cache_read": 80,
+              "input_cache_write": 60,
+              "output_reasoning": 0,
+              "output_other": 223,
+              "unclassified": 0,
+              "total": 910
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-compat-small",
+          "point": {
+            "requests": 3,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 525,
+              "input_cache_read": 20,
+              "input_cache_write": 0,
+              "output_reasoning": 35,
+              "output_other": 235,
+              "unclassified": 0,
+              "total": 815
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "provider": [
+        {
+          "value": "claude",
+          "point": {
+            "requests": 11,
+            "failures": 4,
+            "tokens": {
+              "input_uncached": 1116,
+              "input_cache_read": 160,
+              "input_cache_write": 165,
+              "output_reasoning": 0,
+              "output_other": 434,
+              "unclassified": 0,
+              "total": 1875
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00528975
+          }
+        },
+        {
+          "value": "s5-compat",
+          "point": {
+            "requests": 7,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 1202,
+              "input_cache_read": 60,
+              "input_cache_write": 0,
+              "output_reasoning": 55,
+              "output_other": 528,
+              "unclassified": 0,
+              "total": 1845
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "reasoning_effort": [
+        {
+          "value": "",
+          "point": {
+            "requests": 18,
+            "failures": 6,
+            "tokens": {
+              "input_uncached": 2318,
+              "input_cache_read": 220,
+              "input_cache_write": 165,
+              "output_reasoning": 55,
+              "output_other": 962,
+              "unclassified": 0,
+              "total": 3720
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00528975
+          }
+        }
+      ],
+      "requested_model": [
+        {
+          "value": "s5-compat-large",
+          "point": {
+            "requests": 4,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 677,
+              "input_cache_read": 40,
+              "input_cache_write": 0,
+              "output_reasoning": 20,
+              "output_other": 293,
+              "unclassified": 0,
+              "total": 1030
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-claude-opus",
+          "point": {
+            "requests": 6,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 569,
+              "input_cache_read": 80,
+              "input_cache_write": 105,
+              "output_reasoning": 0,
+              "output_other": 211,
+              "unclassified": 0,
+              "total": 965
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00528975
+          }
+        },
+        {
+          "value": "s5-claude-haiku",
+          "point": {
+            "requests": 5,
+            "failures": 2,
+            "tokens": {
+              "input_uncached": 547,
+              "input_cache_read": 80,
+              "input_cache_write": 60,
+              "output_reasoning": 0,
+              "output_other": 223,
+              "unclassified": 0,
+              "total": 910
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        },
+        {
+          "value": "s5-compat-small",
+          "point": {
+            "requests": 3,
+            "failures": 1,
+            "tokens": {
+              "input_uncached": 525,
+              "input_cache_read": 20,
+              "input_cache_write": 0,
+              "output_reasoning": 35,
+              "output_other": 235,
+              "unclassified": 0,
+              "total": 815
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0
+          }
+        }
+      ],
+      "service_tier": [
+        {
+          "value": "auto",
+          "point": {
+            "requests": 18,
+            "failures": 6,
+            "tokens": {
+              "input_uncached": 2318,
+              "input_cache_read": 220,
+              "input_cache_write": 165,
+              "output_reasoning": 55,
+              "output_other": 962,
+              "unclassified": 0,
+              "total": 3720
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00528975
+          }
+        }
+      ],
+      "stream": [
+        {
+          "value": "sync",
+          "point": {
+            "requests": 10,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 1441,
+              "input_cache_read": 120,
+              "input_cache_write": 90,
+              "output_reasoning": 40,
+              "output_other": 609,
+              "unclassified": 0,
+              "total": 2300
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.00268275
+          }
+        },
+        {
+          "value": "stream",
+          "point": {
+            "requests": 8,
+            "failures": 3,
+            "tokens": {
+              "input_uncached": 877,
+              "input_cache_read": 100,
+              "input_cache_write": 75,
+              "output_reasoning": 15,
+              "output_other": 353,
+              "unclassified": 0,
+              "total": 1420
+            },
+            "latency_ms_sum": 0,
+            "latency_ms_max": 0,
+            "ttft_ms_sum": 0,
+            "ttft_ms_max": 0,
+            "ttft_count": 0,
+            "cost_usd": 0.002607
+          }
+        }
+      ]
+    }
+  }
+}
