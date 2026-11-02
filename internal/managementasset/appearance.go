@@ -22,7 +22,7 @@ func WithAppearance(page []byte) []byte {
 	if !bytes.Contains(page, []byte("cli-proxy-theme")) || bytes.Contains(page, []byte(`id="cpa-appearance"`)) {
 		return page
 	}
-	lower := bytes.ToLower(page)
+	lower := asciiLower(page)
 	headStart := bytes.Index(lower, []byte("<head>"))
 	headEnd := bytes.Index(lower, []byte("</head>"))
 	if headStart < 0 || headEnd < headStart {
@@ -48,4 +48,17 @@ func WithAppearance(page []byte) []byte {
 	result.WriteString("</style>")
 	result.Write(page[headEnd:])
 	return result.Bytes()
+}
+
+// asciiLower folds only ASCII letters so every offset found in the result is
+// also valid in page; Unicode case mapping can change UTF-8 byte lengths.
+func asciiLower(page []byte) []byte {
+	lower := make([]byte, len(page))
+	for i, c := range page {
+		if 'A' <= c && c <= 'Z' {
+			c += 'a' - 'A'
+		}
+		lower[i] = c
+	}
+	return lower
 }

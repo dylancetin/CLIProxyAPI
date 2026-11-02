@@ -39,6 +39,20 @@ func TestWithAppearance(t *testing.T) {
 	}
 }
 
+// Unicode lowercasing changes the byte length of some characters (the Kelvin
+// sign becomes "k"), so offsets found in a lowered copy must stay aligned with
+// the original page.
+func TestWithAppearanceKeepsOffsetsWithMultiByteCase(t *testing.T) {
+	original := []byte("<!doctype html><html><head><meta charset=\"utf-8\"><script type=\"module\">const key = \"cli-proxy-theme\"; const unit = \"\u212a\u212a\u212a\u0130\";</script><style>.release{color:red}</style></head><body><div id=\"root\"></div></body></html>")
+	body := string(WithAppearance(original))
+	if !strings.Contains(body, `<style>.release{color:red}</style><style id="cpa-appearance-style">`) {
+		t.Fatal("appearance styles must start right after the release stylesheet")
+	}
+	if !strings.Contains(body, "</style></head><body>") || !strings.Contains(body, "\u212a\u212a\u212a\u0130") {
+		t.Fatal("release markup was split by the injection")
+	}
+}
+
 func TestWithAppearanceLeavesUnknownPanelsUntouched(t *testing.T) {
 	for _, page := range []string{
 		"",
