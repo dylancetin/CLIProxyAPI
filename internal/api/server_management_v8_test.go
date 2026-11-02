@@ -88,6 +88,9 @@ func TestManagementV8IndependentContract(t *testing.T) {
 	for _, route := range []string{
 		"GET /v0/management/debug", "PUT /v0/management/request-retry", "GET /v0/management/auth-files",
 		"GET /v8/management/observability/logs", "GET /v8/management/observability/usage/queue",
+		"GET /v8/management/observability/usage/api-keys", "GET /v8/management/observability/usage/series",
+		"GET /v8/management/observability/usage/summary", "GET /v8/management/observability/usage/dimensions",
+		"GET /v8/management/observability/usage/prices", "PUT /v8/management/observability/usage/prices",
 		"GET /v8/management/credentials", "POST /v8/management/credentials",
 		"GET /v8/management/oauth/auth-url", "POST /v8/management/oauth/import", "POST /v8/management/oauth/callback",
 		"POST /v8/management/routing/cooldown/reset",
@@ -124,6 +127,26 @@ func TestManagementV8IndependentContract(t *testing.T) {
 		request(route.method, route.path, "", http.StatusNotFound)
 	}
 	request(http.MethodPost, "/v8/management/oauth/providers/vertex/import", "", http.StatusNotFound)
+	for _, route := range []struct{ method, path, body string }{
+		{http.MethodGet, "series", ""},
+		{http.MethodGet, "summary", ""},
+		{http.MethodGet, "dimensions", ""},
+		{http.MethodGet, "prices", ""},
+		{http.MethodPut, "prices", `{"prices":{}}`},
+	} {
+		url := "/v8/management/observability/usage/" + route.path
+		if got := request(route.method, url, route.body, http.StatusServiceUnavailable); got != `{"error":"usage tracker disabled"}` {
+			t.Fatalf("%s %s with tracker disabled: body=%s", route.method, url, got)
+		}
+		unauthenticated := httptest.NewRequest(route.method, url, strings.NewReader(route.body))
+		unauthenticated.RemoteAddr = "127.0.0.1:1234"
+		response := httptest.NewRecorder()
+		s.engine.ServeHTTP(response, unauthenticated)
+		if response.Code != http.StatusUnauthorized {
+			t.Fatalf("%s %s without key: status=%d", route.method, url, response.Code)
+		}
+		request(route.method, "/v0/management/usage/"+route.path, route.body, http.StatusNotFound)
+	}
 	for _, tc := range []struct {
 		method, url, body string
 		status            int
