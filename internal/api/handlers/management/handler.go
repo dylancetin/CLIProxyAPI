@@ -18,6 +18,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/pluginstore"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore"
 	sdkAuth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
 	coreauth "github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
 	log "github.com/sirupsen/logrus"
@@ -61,6 +62,7 @@ type Handler struct {
 	pluginStoreHTTPClient   pluginstore.HTTPDoer
 	pluginStoreRateLimiter  *pluginstore.GitHubRateLimiter
 	pluginReleases          pluginReleaseCache
+	usageStore              *usagestore.Store
 }
 
 type configReloadSnapshot struct {
@@ -162,6 +164,27 @@ func (h *Handler) SetAuthManager(manager *coreauth.Manager) {
 		h.authManager = manager
 	}
 	h.mu.Unlock()
+}
+
+// SetUsageStore updates the usage tracker store; nil means the tracker is disabled.
+func (h *Handler) SetUsageStore(store *usagestore.Store) {
+	if h == nil {
+		return
+	}
+	h.mu.Lock()
+	h.usageStore = store
+	h.mu.Unlock()
+}
+
+// UsageStore returns the current usage tracker store, or nil when the tracker is
+// disabled. Callers must not hold h.mu.
+func (h *Handler) UsageStore() *usagestore.Store {
+	if h == nil {
+		return nil
+	}
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	return h.usageStore
 }
 
 // SetPluginHost updates the plugin host used by plugin-backed management endpoints.
