@@ -417,6 +417,7 @@ type Manager struct {
 	cond   *sync.Cond
 	queue  []queueItem
 	closed bool
+	done   chan struct{} // closed when run returns; nil until Start
 
 	pluginsMu sync.RWMutex
 	plugins   []Plugin
@@ -441,11 +442,19 @@ func (m *Manager) Start(ctx context.Context) {
 		}
 		var workerCtx context.Context
 		workerCtx, m.cancel = context.WithCancel(ctx)
-		go m.run(workerCtx)
+		done := make(chan struct{})
+		m.mu.Lock()
+		m.done = done
+		m.mu.Unlock()
+		go func() {
+			defer close(done)
+			m.run(workerCtx)
+		}()
 	})
 }
 
-// Stop stops the dispatcher and drains the queue.
+// Stop rejects new records, lets the dispatcher deliver every record already
+// queued, and returns once it has exited.
 func (m *Manager) Stop() {
 	if m == nil {
 		return
@@ -459,6 +468,12 @@ func (m *Manager) Stop() {
 		m.mu.Unlock()
 		m.cond.Broadcast()
 	})
+	m.mu.Lock()
+	done := m.done
+	m.mu.Unlock()
+	if done != nil {
+		<-done
+	}
 }
 
 // Register appends a plugin to the delivery list.
@@ -603,5 +618,5 @@ func PublishRecord(ctx context.Context, record Record) { DefaultManager().Publis
 // StartDefault starts the default manager's dispatcher.
 func StartDefault(ctx context.Context) { DefaultManager().Start(ctx) }
 
-// StopDefault stops the default manager's dispatcher.
+// StopDefault stops the default manager's dispatcher after it delivers the queued records.
 func StopDefault() { DefaultManager().Stop() }

@@ -2,6 +2,9 @@ package usage
 
 import (
 	"context"
+	"runtime"
+	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -185,4 +188,66 @@ func TestManagerPublishBackfillsContextAuthFields(t *testing.T) {
 	case <-time.After(time.Second):
 		t.Fatal("timed out waiting for usage record")
 	}
+}
+
+type gatedCountPlugin struct {
+	count   atomic.Int64
+	entered chan struct{}
+	release chan struct{}
+	once    sync.Once
+}
+
+func (p *gatedCountPlugin) HandleUsage(context.Context, Record) {
+	p.once.Do(func() {
+		close(p.entered)
+		<-p.release
+	})
+	p.count.Add(1)
+}
+
+func TestManagerStopDeliversQueuedRecords(t *testing.T) {
+	const n = 200
+	mgr := NewManager(0)
+	plugin := &gatedCountPlugin{entered: make(chan struct{}), release: make(chan struct{})}
+	mgr.Register(plugin)
+	for i := 0; i < n; i++ {
+		mgr.Publish(context.Background(), Record{Provider: "p", Model: "m"})
+	}
+	<-plugin.entered
+
+	stopped := make(chan struct{})
+	go func() {
+		mgr.Stop()
+		close(stopped)
+	}()
+	// Release the blocked delivery only after Stop has closed the queue, so the
+	// remaining records are still queued when Stop starts.
+	for {
+		mgr.mu.Lock()
+		closed := mgr.closed
+		mgr.mu.Unlock()
+		if closed {
+			break
+		}
+		runtime.Gosched()
+	}
+	close(plugin.release)
+	<-stopped
+	if got := plugin.count.Load(); got != n {
+		t.Fatalf("plugin received %d records by the time Stop returned, want %d", got, n)
+	}
+
+	mgr.Publish(context.Background(), Record{Provider: "p", Model: "m"})
+	mgr.Stop()
+	if got := plugin.count.Load(); got != n {
+		t.Fatalf("record published after Stop was delivered: count %d", got)
+	}
+}
+
+func TestManagerStopWithoutStartReturns(t *testing.T) {
+	mgr := NewManager(0)
+	mgr.Stop()
+	mgr.Stop()
+	mgr.Publish(context.Background(), Record{Provider: "p"})
+	mgr.Stop()
 }
