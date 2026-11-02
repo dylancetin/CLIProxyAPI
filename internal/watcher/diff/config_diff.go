@@ -2,6 +2,7 @@ package diff
 
 import (
 	"fmt"
+	"maps"
 	"net/url"
 	"reflect"
 	"strconv"
@@ -45,6 +46,21 @@ func BuildConfigChangeDetails(oldCfg, newCfg *config.Config) []string {
 	}
 	if oldCfg.RedisUsageQueueRetentionSeconds != newCfg.RedisUsageQueueRetentionSeconds {
 		changes = append(changes, fmt.Sprintf("redis-usage-queue-retention-seconds: %d -> %d", oldCfg.RedisUsageQueueRetentionSeconds, newCfg.RedisUsageQueueRetentionSeconds))
+	}
+	if oldCfg.UsageTracker.Enabled != newCfg.UsageTracker.Enabled {
+		changes = append(changes, fmt.Sprintf("usage-tracker.enabled: %t -> %t", oldCfg.UsageTracker.Enabled, newCfg.UsageTracker.Enabled))
+	}
+	if strings.TrimSpace(oldCfg.UsageTracker.SQLitePath) != strings.TrimSpace(newCfg.UsageTracker.SQLitePath) {
+		changes = append(changes, fmt.Sprintf("usage-tracker.sqlite-path: %s -> %s (restart required)", strings.TrimSpace(oldCfg.UsageTracker.SQLitePath), strings.TrimSpace(newCfg.UsageTracker.SQLitePath)))
+	}
+	if oldCfg.UsageTracker.RawRetentionDays != newCfg.UsageTracker.RawRetentionDays {
+		changes = append(changes, fmt.Sprintf("usage-tracker.raw-retention-days: %d -> %d", oldCfg.UsageTracker.RawRetentionDays, newCfg.UsageTracker.RawRetentionDays))
+	}
+	if oldCfg.UsageTracker.HourlyRetentionDays != newCfg.UsageTracker.HourlyRetentionDays {
+		changes = append(changes, fmt.Sprintf("usage-tracker.hourly-retention-days: %d -> %d", oldCfg.UsageTracker.HourlyRetentionDays, newCfg.UsageTracker.HourlyRetentionDays))
+	}
+	if !maps.Equal(oldCfg.UsageTracker.Prices, newCfg.UsageTracker.Prices) {
+		changes = append(changes, fmt.Sprintf("usage-tracker.prices: updated (%d -> %d models)", len(oldCfg.UsageTracker.Prices), len(newCfg.UsageTracker.Prices)))
 	}
 	if oldCfg.DisableCooling != newCfg.DisableCooling {
 		changes = append(changes, fmt.Sprintf("disable-cooling: %t -> %t", oldCfg.DisableCooling, newCfg.DisableCooling))

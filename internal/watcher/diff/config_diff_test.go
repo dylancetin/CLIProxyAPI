@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore/pricing"
 	sdkconfig "github.com/router-for-me/CLIProxyAPI/v8/sdk/config"
 )
 
@@ -125,6 +126,40 @@ func TestBuildConfigChangeDetails(t *testing.T) {
 	expectContains(t, details, "openai-compatibility:")
 	expectContains(t, details, "  provider added: compat-b (api-keys=1, models=0)")
 	expectContains(t, details, "  provider updated: compat-a (models 1 -> 2)")
+}
+
+func TestBuildConfigChangeDetails_UsageTracker(t *testing.T) {
+	oldCfg := &config.Config{UsageTracker: config.UsageTrackerConfig{
+		Enabled:             true,
+		RawRetentionDays:    30,
+		HourlyRetentionDays: 400,
+		Prices:              map[string]pricing.ModelPrice{"m1": {Input: 1, Output: 2}},
+	}}
+	newCfg := &config.Config{UsageTracker: config.UsageTrackerConfig{
+		SQLitePath:          "/data/usage.sqlite",
+		RawRetentionDays:    7,
+		HourlyRetentionDays: 90,
+		Prices: map[string]pricing.ModelPrice{
+			"m1": {Input: 1, Output: 3},
+			"m2": {Input: 4, Output: 5},
+		},
+	}}
+
+	details := BuildConfigChangeDetails(oldCfg, newCfg)
+	expectContains(t, details, "usage-tracker.enabled: true -> false")
+	expectContains(t, details, "usage-tracker.sqlite-path:  -> /data/usage.sqlite (restart required)")
+	expectContains(t, details, "usage-tracker.raw-retention-days: 30 -> 7")
+	expectContains(t, details, "usage-tracker.hourly-retention-days: 400 -> 90")
+	expectContains(t, details, "usage-tracker.prices: updated (1 -> 2 models)")
+
+	// A value-only edit must still be reported; nil and empty price maps are equal.
+	edited := &config.Config{UsageTracker: config.UsageTrackerConfig{Prices: map[string]pricing.ModelPrice{"m1": {Input: 9}}}}
+	original := &config.Config{UsageTracker: config.UsageTrackerConfig{Prices: map[string]pricing.ModelPrice{"m1": {Input: 1}}}}
+	expectContains(t, BuildConfigChangeDetails(original, edited), "usage-tracker.prices: updated (1 -> 1 models)")
+	empty := &config.Config{UsageTracker: config.UsageTrackerConfig{Prices: map[string]pricing.ModelPrice{}}}
+	if details := BuildConfigChangeDetails(&config.Config{}, empty); len(details) != 0 {
+		t.Fatalf("expected no change entries for nil vs empty prices, got %v", details)
+	}
 }
 
 func TestBuildConfigChangeDetails_NoChanges(t *testing.T) {
