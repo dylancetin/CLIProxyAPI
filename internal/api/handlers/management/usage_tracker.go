@@ -2,9 +2,12 @@ package management
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"maps"
+	"math"
 	"net/http"
 	"net/url"
 	"slices"
@@ -523,4 +526,106 @@ func addUsagePoint(a, b usagestore.Point) usagestore.Point {
 	a.TTFTCount += b.TTFTCount
 	a.CostUSD += b.CostUSD
 	return a
+}
+
+const (
+	usageTrackerMaxPrices    = 500
+	usageTrackerMaxPriceBody = 1 << 20
+)
+
+type usagePricesResponse struct {
+	Prices usagestore.Prices `json:"prices"`
+}
+
+type usagePricesRequest struct {
+	Prices map[string]*usagestore.ModelPrice `json:"prices"`
+}
+
+// GetUsagePrices returns the model prices used for cost_usd.
+func (h *Handler) GetUsagePrices(c *gin.Context) {
+	if _, ok := requireUsageStore(c); !ok {
+		return
+	}
+	c.JSON(http.StatusOK, usagePricesResponse{Prices: nonNilUsagePrices(currentUsagePrices().Get())})
+}
+
+// PutUsagePrices replaces the whole price map and returns the stored map.
+func (h *Handler) PutUsagePrices(c *gin.Context) {
+	if _, ok := requireUsageStore(c); !ok {
+		return
+	}
+	prices, errDecode := decodeUsagePrices(c)
+	if errDecode != nil {
+		status := http.StatusBadRequest
+		if _, tooLarge := errors.AsType[*http.MaxBytesError](errDecode); tooLarge {
+			status = http.StatusRequestEntityTooLarge
+		}
+		c.JSON(status, gin.H{"error": errDecode.Error()})
+		return
+	}
+	source := currentUsagePrices()
+	if errPut := source.Put(prices); errPut != nil {
+		log.WithError(errPut).Error("management: failed to save usage tracker prices")
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save prices"})
+		return
+	}
+	c.JSON(http.StatusOK, usagePricesResponse{Prices: nonNilUsagePrices(source.Get())})
+}
+
+func decodeUsagePrices(c *gin.Context) (usagestore.Prices, error) {
+	decoder := json.NewDecoder(http.MaxBytesReader(c.Writer, c.Request.Body, usageTrackerMaxPriceBody))
+	// Rejects misspelled price fields such as the YAML-style "cache-read",
+	// which would otherwise silently price at zero.
+	decoder.DisallowUnknownFields()
+	var body usagePricesRequest
+	if errDecode := decoder.Decode(&body); errDecode != nil {
+		if _, tooLarge := errors.AsType[*http.MaxBytesError](errDecode); tooLarge {
+			return nil, errDecode
+		}
+		return nil, fmt.Errorf("invalid body: %v", errDecode)
+	}
+	if errTrailing := decoder.Decode(&json.RawMessage{}); errTrailing != io.EOF {
+		return nil, errors.New("invalid body: unexpected data after JSON object")
+	}
+	if body.Prices == nil {
+		return nil, errors.New("prices must be an object")
+	}
+	if len(body.Prices) > usageTrackerMaxPrices {
+		return nil, fmt.Errorf("prices must not exceed %d entries", usageTrackerMaxPrices)
+	}
+	prices := make(usagestore.Prices, len(body.Prices))
+	for rawModel, price := range body.Prices {
+		model := strings.TrimSpace(rawModel)
+		if model == "" {
+			return nil, errors.New("model name must not be empty")
+		}
+		if price == nil {
+			return nil, fmt.Errorf("price for %q must be an object", model)
+		}
+		if _, duplicate := prices[model]; duplicate {
+			return nil, fmt.Errorf("duplicate model %q after trimming", model)
+		}
+		for _, field := range []struct {
+			name  string
+			value float64
+		}{
+			{"input", price.Input},
+			{"cache_read", price.CacheRead},
+			{"cache_write", price.CacheWrite},
+			{"output", price.Output},
+		} {
+			if field.value < 0 || math.IsNaN(field.value) || math.IsInf(field.value, 0) {
+				return nil, fmt.Errorf("%s for %q must be a non-negative finite number", field.name, model)
+			}
+		}
+		prices[model] = *price
+	}
+	return prices, nil
+}
+
+func nonNilUsagePrices(prices usagestore.Prices) usagestore.Prices {
+	if prices == nil {
+		return usagestore.Prices{}
+	}
+	return prices
 }
