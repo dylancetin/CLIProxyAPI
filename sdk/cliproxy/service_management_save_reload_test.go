@@ -99,6 +99,8 @@ func newIssue6631Harness(t *testing.T) *issue6631Harness {
 			service.authQueueStop()
 		}
 		_ = watcherWrapper.Stop()
+		// Reloads open the usage tracker in the temp dir; close it like Shutdown does.
+		server.CloseUsageTracker()
 	})
 
 	releaseCh := make(chan struct{})

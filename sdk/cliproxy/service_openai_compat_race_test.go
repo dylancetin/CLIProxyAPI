@@ -106,6 +106,8 @@ func TestPutOpenAICompatConcurrentWithAuthFieldsPatch_Issue6559(t *testing.T) {
 		t.Fatal("NewServer() returned nil")
 	}
 	service.server = server
+	// Reloads open the usage tracker in the temp dir; close it like Shutdown does.
+	t.Cleanup(server.CloseUsageTracker)
 	handler := server.Handler()
 	service.coreManager.RegisterExecutor(&syncTestExecutor{})
 
