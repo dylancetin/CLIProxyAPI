@@ -85,6 +85,9 @@ type Server struct {
 	// management handler
 	mgmt *managementHandlers.Handler
 
+	// usageTracker owns the optional SQLite usage store and its plugin registration.
+	usageTracker usageTrackerRuntime
+
 	// pluginHost owns dynamic plugin Management API route dispatch.
 	pluginHost *pluginhost.Host
 
