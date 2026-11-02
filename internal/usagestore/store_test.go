@@ -7,6 +7,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -167,6 +168,39 @@ func TestPluginWritesThousandEventsAcrossBatches(t *testing.T) {
 	if s.Dropped() != 0 {
 		t.Fatalf("Dropped() = %d, want 0", s.Dropped())
 	}
+}
+
+func TestConcurrentPublishFlushAndQuery(t *testing.T) {
+	s, path := openStore(t, usagestore.Options{})
+	const workers, perWorker = 8, 200
+	var wg sync.WaitGroup
+	for w := range workers {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			attempts := mixedWorkload(perWorker)
+			plugin := s.Plugin()
+			for i, a := range attempts {
+				plugin.HandleUsage(context.Background(), a.record(w*perWorker+i))
+				if i%50 == 0 {
+					if _, err := s.QuerySeries(context.Background(), usagestore.Query{From: t0, To: t0.Add(48 * time.Hour)}, nil); err != nil {
+						t.Errorf("QuerySeries() error = %v", err)
+					}
+					if err := s.Flush(context.Background()); err != nil {
+						t.Errorf("Flush() error = %v", err)
+					}
+				}
+			}
+		}()
+	}
+	wg.Wait()
+	flush(t, s)
+
+	db := openRaw(t, path)
+	if n := countRows(t, db, "usage_events"); n != workers*perWorker {
+		t.Fatalf("usage_events rows = %d, want %d", n, workers*perWorker)
+	}
+	assertRollupsMatchEvents(t, db)
 }
 
 func TestCloseFlushesPendingEvents(t *testing.T) {

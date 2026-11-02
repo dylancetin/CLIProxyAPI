@@ -30,7 +30,8 @@ const (
 	DimStream Dimension = "stream"
 )
 
-// dimensionColumns is the single registry mapping Dimension to its SQL column.
+// dimensionColumns is the single registry mapping Dimension to the SQL
+// expression over usage_hourly that yields its rendered value.
 // Add a dimension here and in the schema; nothing else branches on Dimension.
 var dimensionColumns = map[Dimension]string{
 	DimProvider:        "provider",
@@ -40,7 +41,12 @@ var dimensionColumns = map[Dimension]string{
 	DimAPIKey:          "api_key_hash",
 	DimReasoningEffort: "reasoning_effort",
 	DimServiceTier:     "service_tier",
-	DimStream:          "stream",
+	DimStream:          "CASE stream WHEN 0 THEN 'sync' ELSE 'stream' END",
+}
+
+// dimensionHintColumns maps a Dimension to the column holding its display hint.
+var dimensionHintColumns = map[Dimension]string{
+	DimAPIKey: "api_key_hint",
 }
 
 // Bucket is the time granularity of a series. Buckets are aligned in UTC.
@@ -165,6 +171,9 @@ type Point struct {
 // Series is one grouped time series.
 type Series struct {
 	Key SeriesKey
+	// Hints holds the display hint per grouped dimension that has one,
+	// currently the masked key for DimAPIKey. Nil for the "other" series.
+	Hints map[Dimension]string
 	// Points has one entry per bucket in [From, To), zero-filled.
 	Points []Point
 	// Total sums Points; max fields hold maxima.
