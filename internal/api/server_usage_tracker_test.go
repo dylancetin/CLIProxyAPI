@@ -11,6 +11,7 @@ import (
 	"time"
 
 	proxyconfig "github.com/router-for-me/CLIProxyAPI/v8/internal/config"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/logging"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/store"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/usagestore"
 	sdkAuth "github.com/router-for-me/CLIProxyAPI/v8/sdk/auth"
@@ -226,6 +227,60 @@ func TestUsageTrackerReloadLifecycle(t *testing.T) {
 	server.UpdateClients(&cfg)
 	if len(*calls) != 2 {
 		t.Fatal("reload reopened the tracker after close")
+	}
+}
+
+// formattedLogLine renders the first entry whose message contains fragment
+// with the production formatter, which drops fields it does not whitelist.
+func formattedLogLine(t *testing.T, hook *logtest.Hook, fragment string) string {
+	t.Helper()
+	for _, entry := range hook.AllEntries() {
+		if strings.Contains(entry.Message, fragment) {
+			line, errFormat := (&logging.LogFormatter{}).Format(entry)
+			if errFormat != nil {
+				t.Fatal(errFormat)
+			}
+			return string(line)
+		}
+	}
+	t.Fatalf("no log entry contains %q", fragment)
+	return ""
+}
+
+func TestUsageTrackerLogLinesShowPaths(t *testing.T) {
+	hook := captureLogs(t)
+	stubUsageStoreOpener(t, nil)
+	server := newTestServer(t)
+	cfg := trackerConfig(server)
+	path := filepath.Join(cfg.AuthDir, proxyconfig.DefaultUsageTrackerFileName)
+
+	server.UpdateClients(&cfg)
+	moved := filepath.Join(t.TempDir(), "moved.sqlite")
+	cfg.UsageTracker.SQLitePath = moved
+	server.UpdateClients(&cfg)
+	server.CloseUsageTracker()
+
+	for fragment, paths := range map[string][]string{
+		"usage tracker enabled":  {path},
+		"restart required":       {path, moved},
+		"usage tracker disabled": {path},
+	} {
+		line := formattedLogLine(t, hook, fragment)
+		for _, want := range paths {
+			if !strings.Contains(line, want) {
+				t.Fatalf("log line for %q does not show %s: %s", fragment, want, line)
+			}
+		}
+	}
+
+	failHook := captureLogs(t)
+	stubUsageStoreOpener(t, errors.New("disk full"))
+	failing := newTestServer(t)
+	failCfg := trackerConfig(failing)
+	failing.UpdateClients(&failCfg)
+	failPath := filepath.Join(failCfg.AuthDir, proxyconfig.DefaultUsageTrackerFileName)
+	if line := formattedLogLine(t, failHook, "usage tracker unavailable"); !strings.Contains(line, failPath) || !strings.Contains(line, "disk full") {
+		t.Fatalf("open failure line does not show the path and error: %s", line)
 	}
 }
 

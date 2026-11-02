@@ -413,7 +413,7 @@ func (s *Server) syncUsageTracker(ctx context.Context, cfg *config.Config) {
 	if t.store != nil {
 		if path != t.path && path != t.warnedPath {
 			t.warnedPath = path
-			log.WithFields(log.Fields{"current": t.path, "configured": path}).Warn("usage tracker sqlite-path changed; restart required to apply")
+			log.WithFields(log.Fields{"current": t.path, "configured": path}).Warnf("usage tracker sqlite-path changed from %s to %s; restart required to apply", t.path, path)
 		}
 		if raw != t.raw || hourly != t.hourly {
 			t.store.SetRetention(raw, hourly)
@@ -434,7 +434,7 @@ func (s *Server) syncUsageTracker(ctx context.Context, cfg *config.Config) {
 	store, errOpen := openUsageStore(context.WithoutCancel(ctx), usagestore.Options{Path: path, RawRetention: raw, HourlyRetention: hourly})
 	if errOpen != nil {
 		t.failedPath = path
-		log.WithError(errOpen).WithField("path", path).Warn("usage tracker unavailable; continuing without it")
+		log.WithError(errOpen).WithField("path", path).Warnf("usage tracker unavailable at %s; continuing without it", path)
 		return
 	}
 	if t.plugin == nil {
@@ -446,7 +446,7 @@ func (s *Server) syncUsageTracker(ctx context.Context, cfg *config.Config) {
 	if s.mgmt != nil {
 		s.mgmt.SetUsageStore(store)
 	}
-	log.WithField("path", path).Info("usage tracker enabled")
+	log.WithField("path", path).Infof("usage tracker enabled: %s", path)
 }
 
 func (s *Server) closeUsageStoreLocked() {
@@ -461,7 +461,7 @@ func (s *Server) closeUsageStoreLocked() {
 	if errClose := t.store.Close(); errClose != nil {
 		log.WithError(errClose).Warn("failed to close usage tracker store")
 	}
-	log.WithField("path", t.path).Info("usage tracker disabled")
+	log.WithField("path", t.path).Infof("usage tracker disabled: %s", t.path)
 	t.store, t.path, t.warnedPath = nil, "", ""
 }
 
