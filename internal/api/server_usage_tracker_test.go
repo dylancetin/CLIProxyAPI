@@ -21,8 +21,7 @@ type usageStoreOpenCall struct {
 	opts usagestore.Options
 }
 
-// stubUsageStoreOpener records Open calls. Until usagestore.Open is implemented
-// it stands in a zero Store so the reconciliation logic is still exercised.
+// stubUsageStoreOpener records Open calls and opens a real store unless failWith is set.
 func stubUsageStoreOpener(t *testing.T, failWith error) *[]usageStoreOpenCall {
 	t.Helper()
 	var calls []usageStoreOpenCall
@@ -32,11 +31,7 @@ func stubUsageStoreOpener(t *testing.T, failWith error) *[]usageStoreOpenCall {
 		if failWith != nil {
 			return nil, failWith
 		}
-		store, errOpen := usagestore.Open(ctx, opts)
-		if errors.Is(errOpen, usagestore.ErrNotImplemented) {
-			return &usagestore.Store{}, nil
-		}
-		return store, errOpen
+		return usagestore.Open(ctx, opts)
 	}
 	t.Cleanup(func() { openUsageStore = previous })
 	return &calls

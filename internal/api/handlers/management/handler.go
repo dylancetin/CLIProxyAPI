@@ -85,6 +85,7 @@ func NewHandler(cfg *config.Config, configFilePath string, manager *coreauth.Man
 		envSecret:           envSecret,
 	}
 	h.startAttemptCleanup()
+	SetUsageTrackerPrices(configUsagePrices{h: h})
 	return h
 }
 
@@ -174,6 +175,7 @@ func (h *Handler) SetUsageStore(store *usagestore.Store) {
 	h.mu.Lock()
 	h.usageStore = store
 	h.mu.Unlock()
+	SetUsageTrackerStore(store)
 }
 
 // UsageStore returns the current usage tracker store, or nil when the tracker is
