@@ -63,10 +63,16 @@ var claudeCodeSubclientByEntrypoint = map[string]string{
 // Only product surfaces with verified 2.1.220 wire behavior are eligible for
 // pass-through. Other first-party-looking entrypoints are cloaked until their
 // CPA-reachable request shape has been captured and reviewed.
+//
+// t3-code is T3 Code driving the real Claude Code binary through the Agent SDK
+// (CLAUDE_CODE_ENTRYPOINT=t3-code). Cloaking it pins its requests to the
+// profile's older CLI version, which Anthropic rejects for models that require
+// a newer Claude Code (claude-fable-5-2 needs 2.1.290+).
 var nativeClaudeEntrypoints = map[string]bool{
 	"cli":           true,
 	"sdk-cli":       true,
 	"claude-vscode": true,
+	"t3-code":       true,
 }
 
 type claudeCodeHelperShape uint8
