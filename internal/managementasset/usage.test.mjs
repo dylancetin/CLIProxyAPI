@@ -1,5 +1,6 @@
 // Run with: node --test internal/managementasset/usage.test.mjs
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
@@ -57,6 +58,32 @@ test("ignores sessions without a stored key or in retired formats", () => {
   assert.equal(h.decodeAuth('{"state":{"managementKey":"plain"}}', "h"), null);
   assert.equal(h.decodeAuth("enc::v2::not base64!", "h"), null);
   assert.equal(h.decodeAuth(null, "h"), null);
+});
+
+test("SHA-256 matches node:crypto across padding boundaries and UTF-8", () => {
+  const sha = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+  for (const text of ["", "abc", "a".repeat(55), "a".repeat(56), "a".repeat(64), "b".repeat(119), "sk-ü键🔑", "x".repeat(1000)]) {
+    assert.equal(h.sha256Hex(text), sha(text), `length ${text.length}`);
+  }
+});
+
+test("decodes stored panel values other than the session", () => {
+  const names = { ["a".repeat(64)]: "Laptop" };
+  assert.deepEqual(plain(h.decodeStored(obfuscate(JSON.stringify(names), "h"), "h")), names);
+  assert.equal(h.decodeStored(JSON.stringify(names), "h"), null);
+});
+
+test("maps usage key hashes to the names the panel stored", () => {
+  const sha = (text) => createHash("sha256").update(text, "utf8").digest("hex");
+  const apiBase = "http://127.0.0.1:8317";
+  // The panel hashes the key together with its API base.
+  const nameHash = (key) => sha(JSON.stringify(["api-key-name", apiBase, key]));
+  const names = { [nameHash("sk-laptop")]: " Laptop ", [nameHash("sk-blank")]: "  ", [nameHash("sk-gone")]: "Removed" };
+  const got = h.matchKeyNames(names, apiBase, ["sk-laptop", " sk-blank ", "sk-unnamed", 7, ""]);
+  assert.deepEqual(plain([...got]), [[sha("sk-laptop"), "Laptop"]]);
+  assert.equal(h.matchKeyNames(names, "http://other:8317", ["sk-laptop"]).size, 0);
+  assert.equal(h.matchKeyNames(null, apiBase, ["sk-laptop"]).size, 0);
+  assert.equal(h.matchKeyNames(names, apiBase, { keys: [] }).size, 0);
 });
 
 test("normalizes the management base like the panel does", () => {
