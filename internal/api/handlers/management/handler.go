@@ -64,6 +64,8 @@ type Handler struct {
 	pluginReleases          pluginReleaseCache
 	usageStore              usageSeriesStore
 	usagePrices             pricesStore
+	accessOnce              sync.Once
+	accessBroker            *accessBroker
 }
 
 type configReloadSnapshot struct {

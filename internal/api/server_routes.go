@@ -54,6 +54,10 @@ func (s *Server) setupRoutes() {
 	s.engine.HEAD("/healthz", healthzHandler)
 
 	s.engine.GET("/management.html", s.serveManagementControlPanel)
+
+	// Local apps ask for an API key here; a management client approves it.
+	s.engine.POST("/access/requests", s.mgmt.CreateAccessRequest)
+	s.engine.GET("/access/requests/:id", s.mgmt.GetAccessRequest)
 	openaiHandlers := openai.NewOpenAIAPIHandler(s.handlers)
 	geminiHandlers := gemini.NewGeminiAPIHandler(s.handlers)
 	claudeCodeHandlers := claude.NewClaudeCodeAPIHandler(s.handlers)

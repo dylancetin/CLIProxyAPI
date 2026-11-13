@@ -27,6 +27,12 @@ func (s *Server) registerManagementV8Routes() {
 		v8.Handle(method, "/config/*path", s.mgmt.ConfigV8)
 	}
 
+	v8.GET("/access/requests", s.mgmt.ListAccessRequests)
+	v8.POST("/access/requests/:id/approve", s.mgmt.ApproveAccessRequest)
+	v8.POST("/access/requests/:id/deny", s.mgmt.DenyAccessRequest)
+	v8.GET("/access/grants", s.mgmt.ListAccessGrants)
+	v8.DELETE("/access/grants/:id", s.mgmt.RevokeAccessGrant)
+
 	v8.GET("/server/latest-version", s.mgmt.GetLatestVersion)
 	v8.POST("/requests/api-call", s.mgmt.APICall)
 	v8.POST("/routing/cooldown/reset", s.mgmt.ResetQuota)
