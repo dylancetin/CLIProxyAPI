@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"reflect"
 	"strings"
 	"sync"
 	"time"
@@ -29,7 +30,15 @@ import (
 // request gets a dedicated connection that is closed with the response body.
 type utlsRoundTripper struct {
 	dialer proxy.Dialer
+	// roots overrides the system roots. It is nil in production and set by
+	// tests that run a local TLS server.
+	roots *x509.CertPool
 }
+
+// utlsHTTP1OnlyHosts records upstream addresses whose HTTP/2 connections were
+// broken by a TLS-intercepting middlebox. Round trippers are built per client,
+// so the memo lives at package level and lasts for the process lifetime.
+var utlsHTTP1OnlyHosts sync.Map
 
 type closeConnectionBody struct {
 	io.ReadCloser
@@ -69,7 +78,7 @@ func newUtlsRoundTripper(proxyURL string) *utlsRoundTripper {
 	return &utlsRoundTripper{dialer: dialer}
 }
 
-func (t *utlsRoundTripper) createConnection(ctx context.Context, host, addr string) (*tls.UConn, error) {
+func (t *utlsRoundTripper) createConnection(ctx context.Context, host, addr string, http1Only bool) (*tls.UConn, error) {
 	contextDialer, ok := t.dialer.(proxy.ContextDialer)
 	if !ok {
 		return nil, fmt.Errorf("utls: dialer does not support context cancellation")
@@ -79,8 +88,26 @@ func (t *utlsRoundTripper) createConnection(ctx context.Context, host, addr stri
 		return nil, fmt.Errorf("utls: dial upstream: %w", errDial)
 	}
 
-	tlsConfig := &tls.Config{ServerName: host}
-	tlsConn := tls.UClient(conn, tlsConfig, tls.HelloChrome_Auto)
+	tlsConfig := &tls.Config{ServerName: host, RootCAs: t.roots}
+	var tlsConn *tls.UConn
+	if http1Only {
+		spec, errSpec := chromeHTTP1OnlyClientHelloSpec()
+		if errSpec != nil {
+			if errClose := conn.Close(); errClose != nil {
+				log.Debugf("utls: close connection after spec failure: %v", errClose)
+			}
+			return nil, errSpec
+		}
+		tlsConn = tls.UClient(conn, tlsConfig, tls.HelloCustom)
+		if errPreset := tlsConn.ApplyPreset(spec); errPreset != nil {
+			if errClose := conn.Close(); errClose != nil {
+				log.Debugf("utls: close connection after preset failure: %v", errClose)
+			}
+			return nil, fmt.Errorf("utls: apply HTTP/1.1 Chrome ClientHello: %w", errPreset)
+		}
+	} else {
+		tlsConn = tls.UClient(conn, tlsConfig, tls.HelloChrome_Auto)
+	}
 
 	handshakeCtx, cancelHandshake := handshakeContext(ctx)
 	defer cancelHandshake()
@@ -98,6 +125,30 @@ func (t *utlsRoundTripper) createConnection(ctx context.Context, host, addr stri
 	return tlsConn, nil
 }
 
+// chromeHTTP1OnlyClientHelloSpec returns the Chrome ClientHello with ALPN
+// limited to HTTP/1.1. ALPS only applies to h2, so it is dropped. Everything
+// else keeps the Chrome fingerprint. A fresh spec is built per connection
+// because ApplyPreset may mutate extension state.
+func chromeHTTP1OnlyClientHelloSpec() (*tls.ClientHelloSpec, error) {
+	spec, errSpec := tls.UTLSIdToSpec(tls.HelloChrome_Auto)
+	if errSpec != nil {
+		return nil, fmt.Errorf("utls: build Chrome ClientHello spec: %w", errSpec)
+	}
+	extensions := make([]tls.TLSExtension, 0, len(spec.Extensions))
+	for _, extension := range spec.Extensions {
+		switch extension.(type) {
+		case *tls.ALPNExtension:
+			extensions = append(extensions, &tls.ALPNExtension{AlpnProtocols: []string{"http/1.1"}})
+		case *tls.ApplicationSettingsExtension, *tls.ApplicationSettingsExtensionNew:
+			// ALPS negotiates h2 settings; it has no meaning without h2.
+		default:
+			extensions = append(extensions, extension)
+		}
+	}
+	spec.Extensions = extensions
+	return &spec, nil
+}
+
 func (t *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
 	hostname := req.URL.Hostname()
 	port := req.URL.Port()
@@ -106,11 +157,83 @@ func (t *utlsRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) 
 	}
 	addr := net.JoinHostPort(hostname, port)
 
-	tlsConn, err := t.createConnection(req.Context(), hostname, addr)
+	_, http1Only := utlsHTTP1OnlyHosts.Load(addr)
+	tlsConn, err := t.createConnection(req.Context(), hostname, addr, http1Only)
 	if err != nil {
 		return nil, err
 	}
-	return roundTripUtlsConnection(req, tlsConn)
+	resp, err := roundTripUtlsConnection(req, tlsConn)
+	if err == nil || http1Only || req.Context().Err() != nil || !isHTTP2ProtocolError(err) {
+		return resp, err
+	}
+
+	// The h2 connection failed with PROTOCOL_ERROR before any response
+	// headers (errors after headers surface from the body instead). A
+	// TLS-intercepting middlebox that mangles HTTP/2 framing is the usual
+	// cause, and those handle HTTP/1.1 fine.
+	if _, loaded := utlsHTTP1OnlyHosts.LoadOrStore(addr, struct{}{}); !loaded {
+		log.Warnf("utls: HTTP/2 connection to %s failed with a protocol error (%v). A TLS-intercepting proxy or antivirus HTTPS scanning is the likely cause. Switching %s to HTTP/1.1 for the rest of this process.", addr, err, hostname)
+	}
+	retryReq, errRewind := rewindRequestBody(req)
+	if errRewind != nil {
+		log.Debugf("utls: cannot retry %s over HTTP/1.1: %v", addr, errRewind)
+		return nil, err
+	}
+	tlsConn, errRetry := t.createConnection(retryReq.Context(), hostname, addr, true)
+	if errRetry != nil {
+		return nil, errRetry
+	}
+	return roundTripUtlsConnection(retryReq, tlsConn)
+}
+
+// isHTTP2ProtocolError reports whether err is an HTTP/2 connection-level
+// PROTOCOL_ERROR, such as a missing initial SETTINGS frame. Since Go 1.27,
+// x/net/http2 wraps net/http's internal HTTP/2 client and returns that internal
+// package's ConnectionError, so both types are matched.
+func isHTTP2ProtocolError(err error) bool {
+	pending := []error{err}
+	for len(pending) > 0 {
+		current := pending[len(pending)-1]
+		pending = pending[:len(pending)-1]
+		if current == nil {
+			continue
+		}
+		var connErr http2.ConnectionError
+		if errors.As(current, &connErr) && http2.ErrCode(connErr) == http2.ErrCodeProtocol {
+			return true
+		}
+		value := reflect.ValueOf(current)
+		valueType := value.Type()
+		if valueType.Name() == "ConnectionError" && valueType.Kind() == reflect.Uint32 &&
+			(valueType.PkgPath() == "net/http/internal/http2" || valueType.PkgPath() == "golang.org/x/net/http2") &&
+			value.Uint() == uint64(http2.ErrCodeProtocol) {
+			return true
+		}
+		switch unwrapper := current.(type) {
+		case interface{ Unwrap() error }:
+			pending = append(pending, unwrapper.Unwrap())
+		case interface{ Unwrap() []error }:
+			pending = append(pending, unwrapper.Unwrap()...)
+		}
+	}
+	return false
+}
+
+// rewindRequestBody returns a copy of req with a fresh body for a retry.
+func rewindRequestBody(req *http.Request) (*http.Request, error) {
+	retryReq := req.Clone(req.Context())
+	if req.Body == nil || req.Body == http.NoBody {
+		return retryReq, nil
+	}
+	if req.GetBody == nil {
+		return nil, errors.New("request body is not replayable")
+	}
+	body, errBody := req.GetBody()
+	if errBody != nil {
+		return nil, fmt.Errorf("replay request body: %w", errBody)
+	}
+	retryReq.Body = body
+	return retryReq, nil
 }
 
 // roundTripUtlsConnection selects the HTTP protocol before sending the request.

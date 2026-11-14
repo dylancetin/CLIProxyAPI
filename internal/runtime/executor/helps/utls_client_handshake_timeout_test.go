@@ -175,7 +175,7 @@ func TestUtlsRoundTripperHandshakeTimeoutBoundsSilentPeer(t *testing.T) {
 
 	connectionDone := make(chan error, 1)
 	go func() {
-		tlsConn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443")
+		tlsConn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443", false)
 		if tlsConn != nil {
 			errConnect = errors.Join(errConnect, tlsConn.Close())
 		}
@@ -224,7 +224,7 @@ func TestUtlsRoundTripperWithoutHandshakeBoundWaitsForCaller(t *testing.T) {
 
 	connectionDone := make(chan error, 1)
 	go func() {
-		tlsConn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443")
+		tlsConn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443", false)
 		if tlsConn != nil {
 			errConnect = errors.Join(errConnect, tlsConn.Close())
 		}

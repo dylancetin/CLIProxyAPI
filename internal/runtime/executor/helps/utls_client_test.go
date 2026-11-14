@@ -171,7 +171,7 @@ func TestUtlsRoundTripperHandshakeUsesRequestContext(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
 	connectionDone := make(chan error, 1)
 	go func() {
-		h2Conn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443")
+		h2Conn, errConnect := roundTripper.createConnection(ctx, "chatgpt.com", "chatgpt.com:443", false)
 		if h2Conn != nil {
 			errConnect = errors.Join(errConnect, h2Conn.Close())
 		}
