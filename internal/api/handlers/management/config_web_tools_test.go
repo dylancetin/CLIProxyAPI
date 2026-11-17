@@ -26,7 +26,7 @@ func TestConfigV8WebToolsRoundTrip(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !cfg.WebTools.Enabled || cfg.WebTools.Search.Default != "brave" || cfg.WebTools.Domains.Mode != "denylist" {
+	if !cfg.WebTools.Enabled || cfg.WebTools.Search.Default != "auto" || !cfg.WebTools.Search.Keyless || cfg.WebTools.Domains.Mode != "denylist" {
 		t.Fatalf("defaults = %+v", cfg.WebTools)
 	}
 	h := &Handler{cfg: cfg, configFilePath: path}
@@ -55,8 +55,9 @@ func TestConfigV8WebToolsRoundTrip(t *testing.T) {
 			!slices.Equal(w.Domains.List, []string{"example.com", "wiki.org"}) {
 			t.Fatalf("reloaded web tools = %+v", w)
 		}
-		if got := w.Search.Configured(); !slices.Equal(got, []string{"tavily", "exa"}) {
-			t.Fatalf("configured = %v", got)
+		// The PUT body has no "keyless" field, so keyless search stays on.
+		if got := w.Search.Usable(); !w.Search.Keyless || !slices.Equal(got, []string{"tavily", "exa", "parallel", "firecrawl", "tinyfish"}) {
+			t.Fatalf("usable = %v", got)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("no reload after PUT")
@@ -82,5 +83,20 @@ func TestConfigV8WebToolsRoundTrip(t *testing.T) {
 	}
 	if reparsed.WebTools.Search.Providers.Tavily.APIKey != "tv-1" {
 		t.Fatalf("reparsed = %+v", reparsed.WebTools)
+	}
+
+	// New fields: keyless off, "auto" default, a key for a new provider.
+	body = `{"enabled":true,"search":{"default":"auto","keyless":false,"providers":{"tinyfish":{"api-key":"tf-1"}}},"domains":{"mode":"denylist","list":[]}}`
+	if code, out := do(http.MethodPut, body); code != http.StatusOK {
+		t.Fatalf("PUT = %d %s", code, out)
+	}
+	select {
+	case next := <-reloads:
+		s := next.WebTools.Search
+		if s.Keyless || s.Default != "auto" || s.Providers.TinyFish.APIKey != "tf-1" || !slices.Equal(s.Usable(), []string{"tinyfish"}) {
+			t.Fatalf("reloaded search = %+v", s)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("no reload after second PUT")
 	}
 }

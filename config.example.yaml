@@ -152,11 +152,19 @@ access:
 web-tools:
   enabled: true
   search:
-    default: brave # brave | tavily | exa; used when a search names no provider
-    providers:
-      brave: { api-key: "" }  # https://brave.com/search/api/
-      tavily: { api-key: "" } # https://app.tavily.com/
-      exa: { api-key: "" }    # https://dashboard.exa.ai/api-keys
+    # Used when a search names no provider: auto (Tollgate picks one per app and
+    # moves on to the next when a provider is rate limited) or a provider id.
+    default: auto # auto | brave | tavily | exa | parallel | firecrawl | tinyfish
+    # Let providers that support it search without an API key (lower limits).
+    # Every provider except Brave does; with this on, search works with no keys.
+    keyless: true
+    providers: # API keys are optional except for Brave; a key lifts the keyless limits
+      brave: { api-key: "" }     # https://brave.com/search/api/ (key required)
+      tavily: { api-key: "" }    # https://app.tavily.com/
+      exa: { api-key: "" }       # https://dashboard.exa.ai/api-keys
+      parallel: { api-key: "" }  # https://platform.parallel.ai/
+      firecrawl: { api-key: "" } # https://www.firecrawl.dev/app/api-keys
+      tinyfish: { api-key: "" }  # https://agent.tinyfish.ai/api-keys
   domains:
     mode: denylist # denylist (block listed sites) | allowlist (allow only listed sites)
     list: [] # hostnames; an entry also matches its subdomains

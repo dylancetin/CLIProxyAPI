@@ -214,13 +214,16 @@ func TestSearchExa(t *testing.T) {
 
 func TestSearchProviderSelection(t *testing.T) {
 	h := newHarness(t)
-	var braveGot, exaGot capturedRequest
+	var braveGot, exaGot, tavilyGot capturedRequest
 	brave := fakeProvider(t, 200, `{"web":{"results":[]}}`, &braveGot)
 	exa := fakeProvider(t, 200, `{"results":[]}`, &exaGot)
+	tavily := fakeProvider(t, 200, `{"results":[]}`, &tavilyGot)
 	h.svc.Providers[config.WebSearchBrave] = Brave{Endpoint: brave.URL}
 	h.svc.Providers[config.WebSearchExa] = Exa{Endpoint: exa.URL}
+	h.svc.Providers[config.WebSearchTavily] = Tavily{Endpoint: tavily.URL}
 
-	// No keys at all.
+	// Keyless search switched off and no keys: nothing can search.
+	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Keyless = false })
 	code, out := h.search(`{"query":"q"}`)
 	if code != 503 || errCode(out) != CodeNotConfigured {
 		t.Fatalf("no keys = %d %v", code, out)
@@ -233,13 +236,14 @@ func TestSearchProviderSelection(t *testing.T) {
 	if code, out := h.search(`{"query":"q","provider":"brave"}`); code != 200 || out["provider"] != "brave" || braveGot.header.Get("X-Subscription-Token") != "b" {
 		t.Fatalf("explicit = %d %v", code, out)
 	}
+	// Keyless is off, so tavily (no key) can't search; unknown names never can.
 	for _, p := range []string{"tavily", "bing"} {
 		code, out := h.search(`{"query":"q","provider":"` + p + `"}`)
 		if code != 400 || errCode(out) != CodeProviderUnavailable {
 			t.Fatalf("provider %s = %d %v", p, code, out)
 		}
 	}
-	// Chosen default without a key: the first configured provider answers.
+	// Chosen default that can't search: Tollgate picks (keyed providers first).
 	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Default = "tavily" })
 	if _, out := h.search(`{"query":"q"}`); out["provider"] != "brave" {
 		t.Fatalf("fallback default = %v", out)
@@ -247,6 +251,24 @@ func TestSearchProviderSelection(t *testing.T) {
 	// Empty results are a success.
 	if code, out := h.search(`{"query":"q"}`); code != 200 || len(out["results"].([]any)) != 0 {
 		t.Fatalf("empty = %d %v", code, out)
+	}
+
+	// Keyless on (the default): tavily answers without a key, Brave still needs one.
+	h.setConfig(func(c *config.WebToolsConfig) {
+		c.Search.Keyless = true
+		c.Search.Providers.Brave.APIKey = ""
+	})
+	if code, out := h.search(`{"query":"q","provider":"tavily"}`); code != 200 || out["provider"] != "tavily" ||
+		tavilyGot.header.Get("X-Tavily-Access-Mode") != "keyless" || tavilyGot.header.Get("Authorization") != "" {
+		t.Fatalf("keyless tavily = %d %v %v", code, out, tavilyGot.header)
+	}
+	if code, out := h.search(`{"query":"q","provider":"brave"}`); code != 400 || errCode(out) != CodeProviderUnavailable {
+		t.Fatalf("brave without key = %d %v", code, out)
+	}
+	// "auto" with exa keyed and others keyless: the keyed provider is preferred.
+	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Default = "auto" })
+	if _, out := h.search(`{"query":"q"}`); out["provider"] != "exa" || exaGot.header.Get("x-api-key") != "e" {
+		t.Fatalf("auto = %v", out)
 	}
 }
 
@@ -367,23 +389,44 @@ func TestProbeStates(t *testing.T) {
 		t.Fatal("render must be false")
 	}
 
+	// Fresh install: search works without keys through the keyless providers.
 	out = probe(webKey)
-	if tl := tool(out, "web_search"); tl["available"] != false || tl["reason"] != CodeNotConfigured || tl["providers"] != nil {
+	keyless := []string{"tavily", "exa", "parallel", "firecrawl", "tinyfish"}
+	if tl := tool(out, "web_search"); tl["available"] != true || tl["mode"] != "auto" || tl["provider"] != "tavily" ||
+		!slices.Equal(anyToStrings(tl["providers"]), keyless) || !slices.Equal(anyToStrings(tl["keyless"]), keyless) {
 		t.Fatalf("search without keys = %v", tl)
 	}
 	if tl := tool(out, "web_fetch"); tl["available"] != true || tl["reason"] != nil {
 		t.Fatalf("fetch without keys = %v", tl)
 	}
 
+	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Keyless = false })
+	if tl := tool(probe(webKey), "web_search"); tl["available"] != false || tl["reason"] != CodeNotConfigured || tl["providers"] != nil || tl["mode"] != nil {
+		t.Fatalf("keyless off without keys = %v", tl)
+	}
+
 	h.setConfig(withKeys("", "t", "e"))
 	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Default = "brave" })
 	tl := tool(probe(webKey), "web_search")
-	if tl["available"] != true || tl["provider"] != "tavily" || !slices.Equal(anyToStrings(tl["providers"]), []string{"tavily", "exa"}) {
+	if tl["available"] != true || tl["provider"] != "tavily" || tl["mode"] != "auto" || !slices.Equal(anyToStrings(tl["providers"]), []string{"tavily", "exa"}) ||
+		len(anyToStrings(tl["keyless"])) != 0 {
 		t.Fatalf("search with keys = %v", tl)
 	}
 	h.setConfig(func(c *config.WebToolsConfig) { c.Search.Default = "exa" })
-	if tl := tool(probe(webKey), "web_search"); tl["provider"] != "exa" {
+	if tl := tool(probe(webKey), "web_search"); tl["provider"] != "exa" || tl["mode"] != "default" {
 		t.Fatalf("chosen default = %v", tl)
+	}
+	// Keys and keyless together: keyed providers first in preference, all listed in display order.
+	h.setConfig(func(c *config.WebToolsConfig) {
+		c.Search.Keyless = true
+		c.Search.Default = "auto"
+		c.Search.Providers.Tavily.APIKey = ""
+		c.Search.Providers.Brave.APIKey = "b"
+	})
+	tl = tool(probe(webKey), "web_search")
+	if tl["provider"] != "brave" || !slices.Equal(anyToStrings(tl["providers"]), []string{"brave", "tavily", "exa", "parallel", "firecrawl", "tinyfish"}) ||
+		!slices.Equal(anyToStrings(tl["keyless"]), []string{"tavily", "parallel", "firecrawl", "tinyfish"}) {
+		t.Fatalf("mixed = %v", tl)
 	}
 
 	h.setConfig(func(c *config.WebToolsConfig) { c.Enabled = false })

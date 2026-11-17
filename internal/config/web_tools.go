@@ -4,13 +4,47 @@ import "strings"
 
 // Web search provider names, in the order clients list them.
 const (
-	WebSearchBrave  = "brave"
-	WebSearchTavily = "tavily"
-	WebSearchExa    = "exa"
+	WebSearchBrave     = "brave"
+	WebSearchTavily    = "tavily"
+	WebSearchExa       = "exa"
+	WebSearchParallel  = "parallel"
+	WebSearchFirecrawl = "firecrawl"
+	WebSearchTinyFish  = "tinyfish"
 )
 
-// WebSearchProviderNames lists the supported web search providers in display order.
-var WebSearchProviderNames = []string{WebSearchBrave, WebSearchTavily, WebSearchExa}
+// WebSearchAuto is the search default that lets Tollgate pick a provider per
+// app and move on to another one when a provider is rate limited.
+const WebSearchAuto = "auto"
+
+// WebSearchProviderNames lists the supported web search providers in display
+// order. The first three keep their v1 order.
+var WebSearchProviderNames = []string{
+	WebSearchBrave, WebSearchTavily, WebSearchExa,
+	WebSearchParallel, WebSearchFirecrawl, WebSearchTinyFish,
+}
+
+// webSearchKeyless marks the providers that answer without an API key (with
+// lower limits). Brave has no keyless mode.
+var webSearchKeyless = map[string]bool{
+	WebSearchTavily:    true,
+	WebSearchExa:       true,
+	WebSearchParallel:  true,
+	WebSearchFirecrawl: true,
+	WebSearchTinyFish:  true,
+}
+
+// WebSearchSupportsKeyless reports whether a provider can search without an API key.
+func WebSearchSupportsKeyless(name string) bool { return webSearchKeyless[name] }
+
+// IsWebSearchProvider reports whether name is a supported provider.
+func IsWebSearchProvider(name string) bool {
+	for _, p := range WebSearchProviderNames {
+		if p == name {
+			return true
+		}
+	}
+	return false
+}
 
 // Web tools domain list modes.
 const (
@@ -32,20 +66,28 @@ type WebToolsConfig struct {
 
 // WebSearchConfig holds the search provider keys and the default provider.
 type WebSearchConfig struct {
-	// Default names the provider used when a search names none: brave, tavily or exa.
+	// Default names the provider used when a search names none (one of
+	// WebSearchProviderNames), or "auto" to let Tollgate pick.
 	Default string `yaml:"default" json:"default"`
+	// Keyless lets providers that support it search without an API key.
+	// Default true; when false only providers with a key can search.
+	Keyless bool `yaml:"keyless" json:"keyless"`
 	// Providers holds one API key per provider.
 	Providers WebSearchProviders `yaml:"providers" json:"providers"`
 }
 
 // WebSearchProviders holds the per-provider settings.
 type WebSearchProviders struct {
-	Brave  WebSearchProviderConfig `yaml:"brave" json:"brave"`
-	Tavily WebSearchProviderConfig `yaml:"tavily" json:"tavily"`
-	Exa    WebSearchProviderConfig `yaml:"exa" json:"exa"`
+	Brave     WebSearchProviderConfig `yaml:"brave" json:"brave"`
+	Tavily    WebSearchProviderConfig `yaml:"tavily" json:"tavily"`
+	Exa       WebSearchProviderConfig `yaml:"exa" json:"exa"`
+	Parallel  WebSearchProviderConfig `yaml:"parallel" json:"parallel"`
+	Firecrawl WebSearchProviderConfig `yaml:"firecrawl" json:"firecrawl"`
+	TinyFish  WebSearchProviderConfig `yaml:"tinyfish" json:"tinyfish"`
 }
 
-// WebSearchProviderConfig holds one provider's API key.
+// WebSearchProviderConfig holds one provider's API key (optional for
+// providers that support keyless use).
 type WebSearchProviderConfig struct {
 	APIKey string `yaml:"api-key" json:"api-key"`
 }
@@ -63,7 +105,7 @@ type WebDomainsConfig struct {
 func DefaultWebToolsConfig() WebToolsConfig {
 	return WebToolsConfig{
 		Enabled: true,
-		Search:  WebSearchConfig{Default: WebSearchBrave},
+		Search:  WebSearchConfig{Default: WebSearchAuto, Keyless: true},
 		Domains: WebDomainsConfig{Mode: WebDomainsDenylist, List: []string{}},
 	}
 }
@@ -77,34 +119,40 @@ func (p WebSearchProviders) APIKey(name string) string {
 		return strings.TrimSpace(p.Tavily.APIKey)
 	case WebSearchExa:
 		return strings.TrimSpace(p.Exa.APIKey)
+	case WebSearchParallel:
+		return strings.TrimSpace(p.Parallel.APIKey)
+	case WebSearchFirecrawl:
+		return strings.TrimSpace(p.Firecrawl.APIKey)
+	case WebSearchTinyFish:
+		return strings.TrimSpace(p.TinyFish.APIKey)
 	}
 	return ""
 }
 
-// Configured lists the providers that have an API key, in display order.
-func (s WebSearchConfig) Configured() []string {
+// CanSearch reports whether a provider can answer: it has an API key, or it
+// supports keyless use and keyless use is on.
+func (s WebSearchConfig) CanSearch(name string) bool {
+	if !IsWebSearchProvider(name) {
+		return false
+	}
+	return s.Providers.APIKey(name) != "" || (s.Keyless && WebSearchSupportsKeyless(name))
+}
+
+// Usable lists the providers that can search, in display order.
+func (s WebSearchConfig) Usable() []string {
 	out := []string{}
 	for _, name := range WebSearchProviderNames {
-		if s.Providers.APIKey(name) != "" {
+		if s.CanSearch(name) {
 			out = append(out, name)
 		}
 	}
 	return out
 }
 
-// EffectiveDefault is the chosen default when it has a key, else the first
-// configured provider, else "".
-func (s WebSearchConfig) EffectiveDefault() string {
-	configured := s.Configured()
-	for _, name := range configured {
-		if name == s.Default {
-			return name
-		}
-	}
-	if len(configured) > 0 {
-		return configured[0]
-	}
-	return ""
+// IsAuto reports whether Tollgate picks the provider: the default is "auto",
+// or the chosen provider can't search (no key and no keyless mode).
+func (s WebSearchConfig) IsAuto() bool {
+	return s.Default == WebSearchAuto || !s.CanSearch(s.Default)
 }
 
 // NormalizeWebToolsConfig cleans up values a user may have typed by hand:
@@ -116,10 +164,8 @@ func (cfg *Config) NormalizeWebToolsConfig() {
 	}
 	w := &cfg.WebTools
 	w.Search.Default = strings.ToLower(strings.TrimSpace(w.Search.Default))
-	switch w.Search.Default {
-	case WebSearchBrave, WebSearchTavily, WebSearchExa:
-	default:
-		w.Search.Default = WebSearchBrave
+	if w.Search.Default != WebSearchAuto && !IsWebSearchProvider(w.Search.Default) {
+		w.Search.Default = WebSearchAuto
 	}
 	w.Domains.Mode = strings.ToLower(strings.TrimSpace(w.Domains.Mode))
 	if w.Domains.Mode != WebDomainsAllowlist {

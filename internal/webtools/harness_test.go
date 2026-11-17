@@ -117,6 +117,18 @@ func newHarness(t *testing.T) *harness {
 		}
 		return []string{"models", "web"}
 	}, nowFn)
+	// Keyless providers can search with no setup; keep tests off the network
+	// unless a test points a provider at its own fake server.
+	const offline = "http://127.0.0.1:1"
+	h.svc.Providers = map[string]Provider{
+		config.WebSearchBrave:     Brave{Endpoint: offline},
+		config.WebSearchTavily:    Tavily{Endpoint: offline},
+		config.WebSearchExa:       Exa{Endpoint: offline, MCPEndpoint: offline},
+		config.WebSearchParallel:  Parallel{Endpoint: offline},
+		config.WebSearchFirecrawl: Firecrawl{Endpoint: offline},
+		config.WebSearchTinyFish:  TinyFish{Endpoint: offline},
+	}
+	h.svc.router.pick = func(int) int { return 0 }
 	siteAddr := h.site.Listener.Addr().String()
 	h.svc.Fetcher = &Fetcher{
 		Resolver: h.resolver,

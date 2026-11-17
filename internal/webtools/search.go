@@ -62,20 +62,44 @@ type Provider interface {
 type providerError struct {
 	status int
 	msg    string
+	// retryAfter is the provider's Retry-After header, raw, if any.
+	retryAfter string
+}
+
+// rateLimited reports whether the provider refused for quota reasons (429, or
+// 402 from keyless modes that ask for payment once a free cap is used up).
+func (e *providerError) rateLimited() bool {
+	return e.status == http.StatusTooManyRequests || e.status == http.StatusPaymentRequired
+}
+
+func statusError(resp *http.Response) *providerError {
+	return &providerError{
+		status:     resp.StatusCode,
+		msg:        fmt.Sprintf("the provider answered %d %s", resp.StatusCode, statusText(resp.StatusCode)),
+		retryAfter: resp.Header.Get("Retry-After"),
+	}
 }
 
 func (e *providerError) Error() string { return e.msg }
 
 // Default provider API endpoints.
 const (
-	BraveEndpoint  = "https://api.search.brave.com/res/v1/web/search"
-	TavilyEndpoint = "https://api.tavily.com/search"
-	ExaEndpoint    = "https://api.exa.ai/search"
+	BraveEndpoint     = "https://api.search.brave.com/res/v1/web/search"
+	TavilyEndpoint    = "https://api.tavily.com/search"
+	ExaEndpoint       = "https://api.exa.ai/search"
+	ExaMCPEndpoint    = "https://mcp.exa.ai/mcp"
+	ParallelEndpoint  = "https://search.parallel.ai/mcp"
+	FirecrawlEndpoint = "https://mcp.firecrawl.dev/v2/mcp"
+	TinyFishEndpoint  = "https://agent.tinyfish.ai/mcp"
 )
+
+// clientName identifies Tollgate to providers that ask for it.
+const clientName = "cli-tollgate"
 
 // doJSON sends req and decodes a JSON response into out.
 func doJSON(client *http.Client, req *http.Request, out any) error {
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", UserAgent())
 	resp, err := client.Do(req)
 	if err != nil {
 		return err
@@ -86,7 +110,7 @@ func doJSON(client *http.Client, req *http.Request, out any) error {
 		return err
 	}
 	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return &providerError{status: resp.StatusCode, msg: fmt.Sprintf("the provider answered %d %s", resp.StatusCode, statusText(resp.StatusCode))}
+		return statusError(resp)
 	}
 	if err := json.Unmarshal(body, out); err != nil {
 		return &providerError{msg: "the provider returned invalid JSON"}
@@ -175,7 +199,8 @@ func (b Brave) Search(ctx context.Context, client *http.Client, apiKey string, q
 
 // --- Tavily ---
 
-// Tavily calls the Tavily search API.
+// Tavily calls the Tavily search API. Without an API key it uses Tavily's
+// keyless access mode (a small daily cap per IP address).
 type Tavily struct{ Endpoint string }
 
 func (Tavily) Name() string { return config.WebSearchTavily }
@@ -205,7 +230,12 @@ func (t Tavily) Search(ctx context.Context, client *http.Client, apiKey string, 
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("X-Client-Name", clientName)
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	} else {
+		req.Header.Set("X-Tavily-Access-Mode", "keyless")
+	}
 	var out struct {
 		Results []struct {
 			Title         string `json:"title"`
@@ -226,10 +256,12 @@ func (t Tavily) Search(ctx context.Context, client *http.Client, apiKey string, 
 
 // --- Exa ---
 
-// Exa calls the Exa search API.
+// Exa calls the Exa search API with an API key, and Exa's hosted MCP server
+// (which needs none) without one.
 type Exa struct {
-	Endpoint string
-	Now      func() time.Time
+	Endpoint    string
+	MCPEndpoint string
+	Now         func() time.Time
 }
 
 func (Exa) Name() string { return config.WebSearchExa }
@@ -239,6 +271,9 @@ var exaPeriods = map[string]time.Duration{
 }
 
 func (e Exa) Search(ctx context.Context, client *http.Client, apiKey string, q SearchQuery) ([]RawResult, error) {
+	if apiKey == "" {
+		return e.searchKeyless(ctx, client, q)
+	}
 	endpoint := e.Endpoint
 	if endpoint == "" {
 		endpoint = ExaEndpoint

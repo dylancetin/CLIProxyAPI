@@ -3,6 +3,7 @@ package webtools
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"regexp"
@@ -48,6 +49,7 @@ type Service struct {
 	now     func() time.Time
 	limiter *limiter
 	cache   *pageCache
+	router  *router
 }
 
 // UserAgent is the honest User-Agent sent to sites. CLI Tollgate stamps the
@@ -57,11 +59,18 @@ func UserAgent() string {
 }
 
 func userAgentFor(version string) string {
+	return "Mozilla/5.0 (compatible; CLI-Tollgate/" + cleanVersion(version) + "; +https://github.com/dylancetin/cli-tollgate)"
+}
+
+// appVersion is the app version reported to providers.
+func appVersion() string { return cleanVersion(buildinfo.Version) }
+
+func cleanVersion(version string) string {
 	version = strings.TrimPrefix(strings.TrimPrefix(strings.TrimSpace(version), "tollgate-"), "v")
 	if version == "" {
 		version = "dev"
 	}
-	return "Mozilla/5.0 (compatible; CLI-Tollgate/" + version + "; +https://github.com/dylancetin/cli-tollgate)"
+	return version
 }
 
 // NewService builds a Service with the production fetcher and providers.
@@ -78,13 +87,17 @@ func newService(cfg func() config.WebToolsConfig, scopes func(string) []string, 
 		SearchClient:  &http.Client{Transport: transport},
 		SearchTimeout: defaultTimeout,
 		Providers: map[string]Provider{
-			config.WebSearchBrave:  Brave{},
-			config.WebSearchTavily: Tavily{},
-			config.WebSearchExa:    Exa{},
+			config.WebSearchBrave:     Brave{},
+			config.WebSearchTavily:    Tavily{},
+			config.WebSearchExa:       Exa{},
+			config.WebSearchParallel:  Parallel{},
+			config.WebSearchFirecrawl: Firecrawl{},
+			config.WebSearchTinyFish:  TinyFish{},
 		},
 		now:     now,
 		limiter: newLimiter(now),
 		cache:   newPageCache(now),
+		router:  newRouter(now),
 	}
 }
 
@@ -114,7 +127,8 @@ func (s *Service) keyScopes(key string) []string {
 // Probe handles GET /v1/tools. It always answers 200 for an authenticated key.
 func (s *Service) Probe(c *gin.Context) {
 	cfg := s.settings()
-	scopes := s.keyScopes(apiKeyFrom(c))
+	key := apiKeyFrom(c)
+	scopes := s.keyScopes(key)
 	hasWeb := slices.Contains(scopes, ScopeWeb)
 
 	search := gin.H{"available": false}
@@ -128,10 +142,22 @@ func (s *Service) Probe(c *gin.Context) {
 		fetch["reason"] = CodeDisabled
 	default:
 		fetch["available"] = true
-		if providers := cfg.Search.Configured(); len(providers) > 0 {
+		if providers := cfg.Search.Usable(); len(providers) > 0 {
+			keyless := []string{}
+			for _, name := range providers {
+				if cfg.Search.Providers.APIKey(name) == "" {
+					keyless = append(keyless, name)
+				}
+			}
+			mode := "default"
+			if cfg.Search.IsAuto() {
+				mode = config.WebSearchAuto
+			}
 			search["available"] = true
-			search["provider"] = cfg.Search.EffectiveDefault()
+			search["provider"] = s.router.current(cfg.Search, key)
 			search["providers"] = providers
+			search["keyless"] = keyless
+			search["mode"] = mode
 		} else {
 			search["reason"] = CodeNotConfigured
 		}
@@ -247,9 +273,8 @@ func (s *Service) Search(c *gin.Context) {
 		fail(terr)
 		return
 	}
-	configured := cfg.Search.Configured()
-	if len(configured) == 0 {
-		fail(newError(http.StatusServiceUnavailable, CodeNotConfigured, "no search provider has an API key in Tollgate"))
+	if len(cfg.Search.Usable()) == 0 {
+		fail(newError(http.StatusServiceUnavailable, CodeNotConfigured, "no search provider can search: add an API key or allow keyless search in Tollgate"))
 		return
 	}
 	var raw searchRequest
@@ -262,18 +287,13 @@ func (s *Service) Search(c *gin.Context) {
 		fail(terr)
 		return
 	}
-	if provider == "" {
-		provider = cfg.Search.EffectiveDefault()
-	} else if !slices.Contains(configured, provider) {
-		fail(newError(http.StatusBadRequest, CodeProviderUnavailable, "search provider %q has no API key in Tollgate", provider))
-		return
+	if provider != "" {
+		if !cfg.Search.CanSearch(provider) || s.Providers[provider] == nil {
+			fail(newError(http.StatusBadRequest, CodeProviderUnavailable, "search provider %q is not available in Tollgate", provider))
+			return
+		}
+		providerName = provider
 	}
-	adapter := s.Providers[provider]
-	if adapter == nil {
-		fail(newError(http.StatusBadRequest, CodeProviderUnavailable, "search provider %q is not available", provider))
-		return
-	}
-	providerName = provider
 	release, terr := s.limiter.acquire(key, "search")
 	if terr != nil {
 		fail(terr)
@@ -281,18 +301,67 @@ func (s *Service) Search(c *gin.Context) {
 	}
 	defer release()
 
+	// A named provider is tried alone; otherwise the router picks one and
+	// moves on to the next when a provider is rate limited.
+	var attempted []string
+	var lastErr *toolError
+	for {
+		name := provider
+		if name == "" {
+			name = s.router.next(cfg.Search, key, attempted)
+		} else if len(attempted) > 0 {
+			name = ""
+		}
+		adapter := s.Providers[name]
+		if name == "" || adapter == nil {
+			break
+		}
+		attempted = append(attempted, name)
+		providerName = strings.Join(attempted, ">")
+		results, terr := s.searchOnce(c.Request.Context(), adapter, cfg, name, q)
+		if terr == nil {
+			c.JSON(http.StatusOK, gin.H{"provider": name, "results": normalizeResults(results, q, cfg.Domains)})
+			return
+		}
+		lastErr = terr
+		if terr.UpstreamStatus != http.StatusTooManyRequests && terr.UpstreamStatus != http.StatusPaymentRequired {
+			break
+		}
+	}
+	if lastErr == nil {
+		// Every usable provider is paused after a rate limit.
+		lastErr = &toolError{HTTPStatus: http.StatusBadGateway, Code: CodeSearchFailed,
+			Message: "every search provider is rate limiting searches; try again later", UpstreamStatus: http.StatusTooManyRequests}
+	}
+	if lastErr.UpstreamStatus == http.StatusTooManyRequests || lastErr.UpstreamStatus == http.StatusPaymentRequired {
+		if provider != "" {
+			lastErr.RetryAfter = s.router.pausedFor(provider, cfg.Search.Providers.APIKey(provider))
+		} else {
+			lastErr.RetryAfter = s.router.retryAfter(cfg.Search)
+		}
+	}
+	fail(lastErr)
+}
+
+// searchOnce calls one provider with the per-call time limit and pauses it
+// when it answers with a rate limit.
+func (s *Service) searchOnce(parent context.Context, adapter Provider, cfg config.WebToolsConfig, name string, q SearchQuery) ([]RawResult, *toolError) {
 	timeout := s.SearchTimeout
 	if timeout <= 0 {
 		timeout = defaultTimeout
 	}
-	ctx, cancel := context.WithTimeout(c.Request.Context(), timeout)
+	ctx, cancel := context.WithTimeout(parent, timeout)
 	defer cancel()
-	results, err := adapter.Search(ctx, s.SearchClient, cfg.Search.Providers.APIKey(provider), q)
-	if err != nil {
-		fail(classifySearchError(ctx, err))
-		return
+	apiKey := cfg.Search.Providers.APIKey(name)
+	results, err := adapter.Search(ctx, s.SearchClient, apiKey, q)
+	if err == nil {
+		return results, nil
 	}
-	c.JSON(http.StatusOK, gin.H{"provider": provider, "results": normalizeResults(results, q, cfg.Domains)})
+	var perr *providerError
+	if errors.As(err, &perr) && perr.rateLimited() {
+		s.router.pause(name, apiKey, perr.retryAfter)
+	}
+	return nil, classifySearchError(ctx, err)
 }
 
 // Fetch handles POST /v1/tools/web_fetch.
