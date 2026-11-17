@@ -41,6 +41,7 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 	cfg.Discovery.Subtypes = []string{"_chat-completions", "_responses", "_messages", "_generate-content", "_interactions"}
 	cfg.RemoteManagement.PanelGitHubRepository = DefaultPanelGitHubRepository
 	cfg.CredentialInFlight = DefaultCredentialInFlightConfig()
+	cfg.WebTools = DefaultWebToolsConfig()
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config payload: %w", err)
@@ -107,6 +108,7 @@ func ParseConfigBytes(data []byte) (*Config, error) {
 
 	cfg.NormalizePluginsConfig()
 	cfg.NormalizeClaudeConfig()
+	cfg.NormalizeWebToolsConfig()
 	if errResolvePluginsDir := cfg.ResolvePluginsDir(); errResolvePluginsDir != nil && cfg.Plugins.Enabled {
 		return nil, errResolvePluginsDir
 	}

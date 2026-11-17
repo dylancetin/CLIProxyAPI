@@ -54,6 +54,9 @@ type Config struct {
 	// Pprof config controls the optional pprof HTTP debug server.
 	Pprof PprofConfig `yaml:"pprof" json:"pprof"`
 
+	// WebTools configures the /v1/tools web search and page fetch endpoints.
+	WebTools WebToolsConfig `yaml:"web-tools" json:"web-tools"`
+
 	// Discovery configures local network mDNS / DNS-SD service advertising.
 	Discovery DiscoveryConfig `yaml:"discovery" json:"discovery"`
 
