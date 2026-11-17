@@ -3,6 +3,8 @@ module github.com/router-for-me/CLIProxyAPI/v8
 go 1.26.0
 
 require (
+	codeberg.org/readeck/go-readability/v2 v2.1.3
+	github.com/JohannesKaufmann/html-to-markdown/v2 v2.5.2
 	github.com/andybalholm/brotli v1.0.6
 	github.com/atotto/clipboard v0.1.4
 	github.com/charmbracelet/bubbles v1.0.0
@@ -43,8 +45,13 @@ require (
 )
 
 require (
+	github.com/JohannesKaufmann/dom v0.3.1 // indirect
+	github.com/andybalholm/cascadia v1.3.4 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
+	github.com/go-shiori/dom v0.0.0-20230515143342-73569d674e1c // indirect
+	github.com/gogs/chardet v0.0.0-20211120154057-b7413eaefb8f // indirect
+	github.com/itlightning/dateparse v0.2.1 // indirect
 	github.com/miekg/dns v1.1.43 // indirect
 	github.com/ncruces/go-strftime v1.1.0 // indirect
 	github.com/pion/datachannel v1.6.2 // indirect
@@ -102,7 +109,7 @@ require (
 	github.com/kevinburke/ssh_config v1.6.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
 	github.com/mattn/go-runewidth v0.0.19 // indirect

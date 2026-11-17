@@ -145,6 +145,22 @@ access:
 #     max-string-bytes: 256
 #     staging-retention: 1m
 
+# Web tools: /v1/tools/web_search and /v1/tools/web_fetch let apps granted the
+# "web" access scope search the web and read pages through this machine.
+# Page fetches are https-only, connect directly (never through proxy-url) and
+# refuse private, loopback and link-local addresses.
+web-tools:
+  enabled: true
+  search:
+    default: brave # brave | tavily | exa; used when a search names no provider
+    providers:
+      brave: { api-key: "" }  # https://brave.com/search/api/
+      tavily: { api-key: "" } # https://app.tavily.com/
+      exa: { api-key: "" }    # https://dashboard.exa.ai/api-keys
+  domains:
+    mode: denylist # denylist (block listed sites) | allowlist (allow only listed sites)
+    list: [] # hostnames; an entry also matches its subdomains
+
 # Routing strategy for selecting credentials when multiple match.
 routing:
   strategy: "round-robin" # round-robin (default), weighted-round-robin, fill-first

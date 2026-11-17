@@ -27,6 +27,7 @@ import (
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/managementasset"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/pluginhost"
 	"github.com/router-for-me/CLIProxyAPI/v8/internal/redisqueue"
+	"github.com/router-for-me/CLIProxyAPI/v8/internal/webtools"
 	sdkaccess "github.com/router-for-me/CLIProxyAPI/v8/sdk/access"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/api/handlers"
 	"github.com/router-for-me/CLIProxyAPI/v8/sdk/cliproxy/auth"
@@ -84,6 +85,9 @@ type Server struct {
 
 	// management handler
 	mgmt *managementHandlers.Handler
+
+	// webTools serves /v1/tools (web search and page fetch for approved apps).
+	webTools *webtools.Service
 
 	// usageTracker owns the optional SQLite usage store and its plugin registration.
 	usageTracker usageTrackerRuntime
@@ -234,6 +238,12 @@ func NewServer(cfg *config.Config, authManager *auth.Manager, accessManager *sdk
 		s.mgmt.SetPostAuthPersistHook(optionState.postAuthPersistHook)
 	}
 	s.localPassword = optionState.localPassword
+	s.webTools = webtools.NewService(func() config.WebToolsConfig {
+		if current := s.getConfig(); current != nil {
+			return current.WebTools
+		}
+		return config.DefaultWebToolsConfig()
+	}, s.mgmt.KeyScopes)
 
 	// Home heartbeat gate: when home is enabled, block all endpoints with 503 until the
 	// subscribe-config heartbeat connection is healthy.

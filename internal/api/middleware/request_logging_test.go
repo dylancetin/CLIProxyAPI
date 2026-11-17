@@ -598,6 +598,17 @@ func TestManagementV8RequestsAreNotLogged(t *testing.T) {
 	}
 }
 
+func TestWebToolsRequestsAreNotLogged(t *testing.T) {
+	for _, path := range []string{"/v1/tools", "/v1/tools/web_search", "/v1/tools/web_fetch"} {
+		if shouldLogRequest(path) {
+			t.Errorf("web tools request would be logged: %s", path)
+		}
+	}
+	if !shouldLogRequest("/v1/toolsmith") || !shouldLogRequest("/v1/chat/completions") {
+		t.Error("other /v1 routes must still honor request-log")
+	}
+}
+
 type spyRequestLogger struct {
 	lastLogRequestID       string
 	lastStreamingRequestID string

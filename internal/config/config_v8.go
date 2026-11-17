@@ -545,7 +545,7 @@ func IsV8ConfigLayout(root *yaml.Node) bool {
 	}
 	root = expandConfigAliases(root)
 	sections := v8AllowedRoots()
-	for _, shared := range []string{"api-keys", "plugins", "quota-exceeded", "routing", "client"} {
+	for _, shared := range []string{"api-keys", "plugins", "quota-exceeded", "routing", "client", "web-tools"} {
 		delete(sections, shared)
 	}
 	for i := 0; i < len(root.Content); i += 2 {

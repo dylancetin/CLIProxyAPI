@@ -90,6 +90,10 @@ func (s *Server) setupRoutes() {
 		v1.POST("/responses", openaiResponsesHandlers.Responses)
 		v1.POST("/responses/compact", openaiResponsesHandlers.Compact)
 		v1.POST("/alpha/search", s.codexAlphaSearch)
+		// Web search and page fetch for apps granted the web scope.
+		v1.GET("/tools", s.webTools.Probe)
+		v1.POST("/tools/web_search", s.webTools.Search)
+		v1.POST("/tools/web_fetch", s.webTools.Fetch)
 		v1.POST("/live", s.codexLiveHandler.Handle)
 		v1.GET("/live/:call_id", s.codexLiveHandler.HandleSideband)
 	}
