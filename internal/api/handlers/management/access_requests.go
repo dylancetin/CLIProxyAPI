@@ -25,7 +25,7 @@ import (
 // keyboard for an API key without copying one by hand:
 //
 //  1. The app generates its own random key and calls POST /access/requests
-//     with {"name", "key"}. The engine answers with a request id.
+//     with {"name", "key", "scopes"}. The engine answers with a request id.
 //  2. A management client (the desktop app) long-polls
 //     GET /v8/management/access/requests and asks the user.
 //  3. Approving adds the key to access.api-keys and records a grant, so the
@@ -35,6 +35,12 @@ import (
 // Requests are only accepted from loopback peers, and only while a
 // management client is watching, so a plain server never queues prompts
 // that nobody will see.
+//
+// Scopes name what an app may do. "models" (everything /v1 served before
+// scopes existed) is always granted and not enforced; "web" unlocks the
+// /v1/tools web search and page fetch endpoints. An app that already holds
+// an approved key can ask for more scopes for that same key (an upgrade
+// request); approving it updates the existing grant.
 
 const (
 	accessRequestTTL        = 5 * time.Minute
@@ -48,6 +54,15 @@ const (
 	accessMaxNameLength     = 64
 	accessGrantsFileName    = "access-grants.json"
 )
+
+// Scopes an access request can ask for, in canonical order.
+const (
+	ScopeModels = "models"
+	ScopeWeb    = "web"
+)
+
+// AllScopes lists every scope; keys without a grant (the user's own) have all of them.
+var AllScopes = []string{ScopeModels, ScopeWeb}
 
 // Access request states.
 const (
@@ -65,6 +80,12 @@ type accessRequest struct {
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 	ExpiresAt time.Time `json:"expires_at"`
+	// Scopes is what the app will have once approved.
+	Scopes []string `json:"scopes"`
+	// Upgrade marks a request for more scopes for an already granted key.
+	Upgrade     bool     `json:"upgrade,omitempty"`
+	GrantID     string   `json:"grant_id,omitempty"`
+	AddedScopes []string `json:"added_scopes,omitempty"`
 
 	key        string
 	resolvedAt time.Time
@@ -79,6 +100,8 @@ type AccessGrant struct {
 	KeyHash   string    `json:"key_hash"`
 	KeyHint   string    `json:"key_hint"`
 	GrantedAt time.Time `json:"granted_at"`
+	// Scopes the app holds; grants written before scopes existed mean ["models"].
+	Scopes []string `json:"scopes"`
 }
 
 type accessBroker struct {
@@ -137,7 +160,10 @@ func (b *accessBroker) pendingLocked() []accessRequest {
 	out := make([]accessRequest, 0)
 	for _, req := range b.requests {
 		if req.Status == AccessPending {
-			out = append(out, *req)
+			copied := *req
+			copied.Scopes = slices.Clone(req.Scopes)
+			copied.AddedScopes = slices.Clone(req.AddedScopes)
+			out = append(out, copied)
 		}
 	}
 	slices.SortFunc(out, func(a, b accessRequest) int { return a.CreatedAt.Compare(b.CreatedAt) })
@@ -208,6 +234,56 @@ func cleanName(name string) string {
 	return name
 }
 
+// normalizeScopes validates requested scope names and returns them in
+// canonical order with "models" always included. A nil list means ["models"].
+func normalizeScopes(requested []string) ([]string, string, bool) {
+	want := map[string]bool{ScopeModels: true}
+	for _, scope := range requested {
+		scope = strings.TrimSpace(scope)
+		if !slices.Contains(AllScopes, scope) {
+			return nil, scope, false
+		}
+		want[scope] = true
+	}
+	out := make([]string, 0, len(want))
+	for _, scope := range AllScopes {
+		if want[scope] {
+			out = append(out, scope)
+		}
+	}
+	return out, "", true
+}
+
+// grantScopes returns a grant's scopes, defaulting old grants to ["models"].
+func grantScopes(g AccessGrant) []string {
+	scopes, _, ok := normalizeScopes(g.Scopes)
+	if !ok {
+		// Keep the scopes we understand from a hand-edited file.
+		scopes = []string{ScopeModels}
+		for _, scope := range g.Scopes {
+			if scope == ScopeWeb {
+				scopes = append(scopes, ScopeWeb)
+				break
+			}
+		}
+	}
+	return scopes
+}
+
+func unionScopes(a, b []string) []string {
+	out := make([]string, 0, len(AllScopes))
+	for _, scope := range AllScopes {
+		if slices.Contains(a, scope) || slices.Contains(b, scope) {
+			out = append(out, scope)
+		}
+	}
+	return out
+}
+
+func accessRefusal(c *gin.Context, status int, code, message string) {
+	c.JSON(status, gin.H{"error": message, "code": code})
+}
+
 // requestOrigin names where the request came from. Browsers always send
 // Origin on cross-origin requests and pages cannot forge it.
 func requestOrigin(c *gin.Context) string {
@@ -224,32 +300,30 @@ func requestOrigin(c *gin.Context) string {
 // CreateAccessRequest handles POST /access/requests (no API key needed).
 func (h *Handler) CreateAccessRequest(c *gin.Context) {
 	if !isLoopbackPeer(c) {
-		c.JSON(http.StatusForbidden, gin.H{"error": "access requests are only accepted from this computer"})
+		accessRefusal(c, http.StatusForbidden, "not_loopback", "access requests are only accepted from this computer")
 		return
 	}
 	var body struct {
-		Name string `json:"name"`
-		Key  string `json:"key"`
+		Name   string   `json:"name"`
+		Key    string   `json:"key"`
+		Scopes []string `json:"scopes"`
 	}
 	if err := json.NewDecoder(http.MaxBytesReader(c.Writer, c.Request.Body, 4096)).Decode(&body); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "body must be JSON: {\"name\": string, \"key\": string}"})
+		accessRefusal(c, http.StatusBadRequest, "invalid_request", "body must be JSON: {\"name\": string, \"key\": string, \"scopes\": [string]}")
 		return
 	}
 	name := cleanName(body.Name)
 	if name == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "name is required"})
+		accessRefusal(c, http.StatusBadRequest, "invalid_request", "name is required")
 		return
 	}
 	if !validAccessKey(body.Key) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "key must be 32-256 characters of A-Z a-z 0-9 - _ ."})
+		accessRefusal(c, http.StatusBadRequest, "invalid_request", "key must be 32-256 characters of A-Z a-z 0-9 - _ .")
 		return
 	}
-
-	h.mu.Lock()
-	known := h.cfg != nil && slices.Contains(h.cfg.APIKeys, body.Key)
-	h.mu.Unlock()
-	if known {
-		c.JSON(http.StatusConflict, gin.H{"error": "this key is already allowed"})
+	scopes, unknown, ok := normalizeScopes(body.Scopes)
+	if !ok {
+		accessRefusal(c, http.StatusBadRequest, "unknown_scope", "unknown scope: "+unknown)
 		return
 	}
 
@@ -258,25 +332,60 @@ func (h *Handler) CreateAccessRequest(c *gin.Context) {
 	now := time.Now()
 	b.mu.Lock()
 	defer b.mu.Unlock()
+
+	// Lock order is always b.mu before h.mu.
+	h.mu.Lock()
+	known := h.cfg != nil && slices.Contains(h.cfg.APIKeys, body.Key)
+	h.mu.Unlock()
+
+	var upgradeOf *AccessGrant
+	var added []string
+	if known {
+		b.loadGrantsLocked(h.grantsPath())
+		hash := hashKey(body.Key)
+		index := slices.IndexFunc(b.grants, func(g AccessGrant) bool { return g.KeyHash == hash })
+		if index < 0 {
+			accessRefusal(c, http.StatusConflict, "key_already_allowed", "this key is already allowed")
+			return
+		}
+		grant := b.grants[index]
+		if grant.Origin != origin {
+			accessRefusal(c, http.StatusConflict, "key_owned_by_other_app", "this key belongs to another app")
+			return
+		}
+		have := grantScopes(grant)
+		for _, scope := range scopes {
+			if !slices.Contains(have, scope) {
+				added = append(added, scope)
+			}
+		}
+		if len(added) == 0 {
+			accessRefusal(c, http.StatusConflict, "scopes_already_granted", "this key already has these scopes")
+			return
+		}
+		upgradeOf = &grant
+		scopes = unionScopes(have, scopes)
+	}
+
 	b.expireLocked(now)
 	if now.Sub(b.lastWatch) > accessWatcherWindow {
-		c.JSON(http.StatusServiceUnavailable, gin.H{"error": "no app is available to approve access requests"})
+		accessRefusal(c, http.StatusServiceUnavailable, "no_approver", "no app is available to approve access requests")
 		return
 	}
 	if until, ok := b.cooldown[origin]; ok && now.Before(until) {
 		c.Header("Retry-After", strconv.Itoa(int(until.Sub(now).Seconds())+1))
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "access was just denied for this origin; try again later"})
+		accessRefusal(c, http.StatusTooManyRequests, "cooldown", "access was just denied for this origin; try again later")
 		return
 	}
 	pending := b.pendingLocked()
 	for _, req := range pending {
 		if req.Origin == origin {
-			c.JSON(http.StatusConflict, gin.H{"error": "a request from this origin is already waiting", "id": req.ID})
+			c.JSON(http.StatusConflict, gin.H{"error": "a request from this origin is already waiting", "code": "request_pending", "id": req.ID})
 			return
 		}
 	}
 	if len(pending) >= accessMaxPending {
-		c.JSON(http.StatusTooManyRequests, gin.H{"error": "too many pending access requests"})
+		accessRefusal(c, http.StatusTooManyRequests, "too_many_pending", "too many pending access requests")
 		return
 	}
 
@@ -292,12 +401,22 @@ func (h *Handler) CreateAccessRequest(c *gin.Context) {
 		Status:    AccessPending,
 		CreatedAt: now,
 		ExpiresAt: now.Add(accessRequestTTL),
+		Scopes:    scopes,
 		key:       body.Key,
+	}
+	if upgradeOf != nil {
+		req.Upgrade = true
+		req.GrantID = upgradeOf.ID
+		req.AddedScopes = added
 	}
 	b.requests[req.ID] = req
 	b.notifyLocked()
-	log.Infof("access request %s from %s (%q) is waiting for approval", req.ID, origin, name)
-	c.JSON(http.StatusAccepted, gin.H{"id": req.ID, "status": req.Status, "expires_at": req.ExpiresAt})
+	if req.Upgrade {
+		log.Infof("access request %s from %s (%q) asks for more scopes %v and is waiting for approval", req.ID, origin, name, added)
+	} else {
+		log.Infof("access request %s from %s (%q) is waiting for approval", req.ID, origin, name)
+	}
+	c.JSON(http.StatusAccepted, gin.H{"id": req.ID, "status": req.Status, "expires_at": req.ExpiresAt, "scopes": req.Scopes})
 }
 
 // GetAccessRequest handles GET /access/requests/:id[?wait=seconds]. It reports
@@ -315,8 +434,10 @@ func (h *Handler) GetAccessRequest(c *gin.Context) {
 		b.expireLocked(time.Now())
 		req, ok := b.requests[id]
 		var status string
+		var scopes []string
 		if ok {
 			status = req.Status
+			scopes = slices.Clone(req.Scopes)
 		}
 		changed := b.changed
 		b.mu.Unlock()
@@ -326,7 +447,11 @@ func (h *Handler) GetAccessRequest(c *gin.Context) {
 			return
 		}
 		if status != AccessPending || !waitForChange(c.Request.Context(), changed, deadline) {
-			c.JSON(http.StatusOK, gin.H{"id": id, "status": status})
+			out := gin.H{"id": id, "status": status}
+			if status == AccessApproved {
+				out["scopes"] = scopes
+			}
+			c.JSON(http.StatusOK, out)
 			return
 		}
 	}
@@ -391,6 +516,37 @@ func (h *Handler) ApproveAccessRequest(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "no pending access request with this id"})
 		return
 	}
+	path := h.grantsPath()
+	b.loadGrantsLocked(path)
+
+	if req.Upgrade {
+		index := slices.IndexFunc(b.grants, func(g AccessGrant) bool { return g.ID == req.GrantID })
+		h.mu.Lock()
+		stillAllowed := h.cfg != nil && slices.Contains(h.cfg.APIKeys, req.key)
+		h.mu.Unlock()
+		if index < 0 || !stillAllowed {
+			// The app was disconnected while the prompt was open.
+			req.Status = AccessExpired
+			req.resolvedAt = now
+			req.key = ""
+			b.notifyLocked()
+			c.JSON(http.StatusConflict, gin.H{"error": "the app was disconnected; its request can no longer be approved", "code": "grant_revoked"})
+			return
+		}
+		b.grants[index].Scopes = unionScopes(grantScopes(b.grants[index]), req.Scopes)
+		if err := b.saveGrantsLocked(path); err != nil {
+			log.Warnf("access grants: %v", err)
+		}
+		grant := b.grants[index]
+		req.Scopes = slices.Clone(grant.Scopes)
+		req.Status = AccessApproved
+		req.resolvedAt = now
+		req.key = ""
+		b.notifyLocked()
+		log.Infof("access request %s from %s approved: grant %s now has scopes %v", req.ID, req.Origin, grant.ID, grant.Scopes)
+		c.JSON(http.StatusOK, grant)
+		return
+	}
 
 	h.mu.Lock()
 	if !slices.Contains(h.cfg.APIKeys, req.key) {
@@ -410,9 +566,11 @@ func (h *Handler) ApproveAccessRequest(c *gin.Context) {
 		KeyHash:   hashKey(req.key),
 		KeyHint:   keyHint(req.key),
 		GrantedAt: now,
+		Scopes:    slices.Clone(req.Scopes),
 	}
-	path := h.grantsPath()
-	b.loadGrantsLocked(path)
+	// A stale grant for the same key (its key was removed some other way)
+	// would otherwise shadow the new one.
+	b.grants = slices.DeleteFunc(b.grants, func(g AccessGrant) bool { return g.KeyHash == grant.KeyHash })
 	b.grants = append(b.grants, grant)
 	if err := b.saveGrantsLocked(path); err != nil {
 		log.Warnf("access grants: %v", err)
@@ -421,7 +579,7 @@ func (h *Handler) ApproveAccessRequest(c *gin.Context) {
 	req.resolvedAt = now
 	req.key = ""
 	b.notifyLocked()
-	log.Infof("access request %s from %s approved", req.ID, req.Origin)
+	log.Infof("access request %s from %s approved with scopes %v", req.ID, req.Origin, req.Scopes)
 	c.JSON(http.StatusOK, grant)
 }
 
@@ -535,7 +693,30 @@ func (b *accessBroker) loadGrantsLocked(path string) {
 		log.Warnf("access grants: %s is not valid JSON: %v", path, err)
 		return
 	}
+	for i := range file.Grants {
+		file.Grants[i].Scopes = grantScopes(file.Grants[i])
+	}
 	b.grants = file.Grants
+}
+
+// KeyScopes reports the scopes of an authenticated API key: the grant's
+// scopes for a key approved through an access request, every scope for the
+// user's own keys (no grant).
+func (h *Handler) KeyScopes(key string) []string {
+	if h == nil || key == "" {
+		return slices.Clone(AllScopes)
+	}
+	hash := hashKey(key)
+	b := h.access()
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	b.loadGrantsLocked(h.grantsPath())
+	for _, g := range b.grants {
+		if g.KeyHash == hash {
+			return slices.Clone(grantScopes(g))
+		}
+	}
+	return slices.Clone(AllScopes)
 }
 
 func (b *accessBroker) saveGrantsLocked(path string) error {
