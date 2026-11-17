@@ -27,7 +27,8 @@ const (
 //   - the user's default when it can search ("default" mode);
 //   - in "auto" mode, the provider this app used last (sticky, so one
 //     conversation keeps one provider's style), else a random one,
-//     preferring providers with an API key over keyless ones.
+//     preferring providers with an API key over keyless ones (a keyless
+//     provider stops being sticky once a keyed one can answer).
 //
 // After a 429 the provider is paused for Retry-After (60 s when absent) and
 // the next untried, unpaused provider is used, keyed ones first.
@@ -97,17 +98,17 @@ func (r *router) next(s config.WebSearchConfig, appKey string, attempted []strin
 	if !auto && open(s.Default) {
 		return s.Default
 	}
-	if auto {
-		if last := r.affinity[appKey]; last != "" && open(last) {
-			return last
-		}
-	}
 	group := keyed
 	if len(group) == 0 {
 		group = keyless
 	}
 	if len(group) == 0 {
 		return ""
+	}
+	// Stick to the app's provider while it is in the preferred group, so a
+	// newly added key is used rather than a keyless provider picked earlier.
+	if last := r.affinity[appKey]; auto && last != "" && slices.Contains(group, last) {
+		return last
 	}
 	choice := group[r.pick(len(group))]
 	if auto {
@@ -119,9 +120,15 @@ func (r *router) next(s config.WebSearchConfig, appKey string, attempted []strin
 	return choice
 }
 
-// current is the provider a search by appKey would most likely use, for the
-// probe. It has no side effects.
+// current is the provider the next search by appKey that names none would
+// use, for the probe. In auto mode it makes the same sticky pick a search
+// would, so the probe and the next search agree.
 func (r *router) current(s config.WebSearchConfig, appKey string) string {
+	if s.IsAuto() {
+		if name := r.next(s, appKey, nil); name != "" {
+			return name
+		}
+	}
 	r.mu.Lock()
 	defer r.mu.Unlock()
 	usable := s.Usable()
@@ -134,11 +141,6 @@ func (r *router) current(s config.WebSearchConfig, appKey string) string {
 	}
 	if !s.IsAuto() && isOpen(s.Default) {
 		return s.Default
-	}
-	if s.IsAuto() {
-		if last := r.affinity[appKey]; last != "" && isOpen(last) {
-			return last
-		}
 	}
 	// First open keyed provider, else first open keyless one, else the first usable.
 	for _, wantKey := range []bool{true, false} {

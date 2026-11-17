@@ -464,25 +464,27 @@ func TestRouterAutoSticky(t *testing.T) {
 	if first != "tinyfish" || r.next(cfg, "app-1", nil) != "tinyfish" || picks != 1 {
 		t.Fatalf("sticky = %s picks %d", first, picks)
 	}
-	if r.current(cfg, "app-1") != "tinyfish" || r.current(cfg, "app-2") != "tavily" {
+	// The probe's answer is the sticky pick the next search uses.
+	if r.current(cfg, "app-1") != "tinyfish" || r.current(cfg, "app-2") != "tinyfish" || r.affinity["app-2"] != "tinyfish" || picks != 2 {
 		t.Fatalf("current = %s / %s", r.current(cfg, "app-1"), r.current(cfg, "app-2"))
 	}
 	// Failover within the same search skips attempted ones and moves the affinity.
 	if got := r.next(cfg, "app-1", []string{"tinyfish"}); got != "firecrawl" || r.affinity["app-1"] != "firecrawl" {
 		t.Fatalf("failover pick = %s", got)
 	}
-	// A keyed provider wins over keyless ones once it exists, but affinity holds while it is open.
-	cfg.Providers.Exa.APIKey = "e"
-	if got := r.next(cfg, "app-1", nil); got != "firecrawl" {
-		t.Fatalf("affinity kept = %s", got)
+	// Paused sticky provider: another is picked and becomes sticky.
+	r.pause("firecrawl", "", "10")
+	if got := r.next(cfg, "app-1", nil); got != "tinyfish" || r.affinity["app-1"] != "tinyfish" {
+		t.Fatalf("paused sticky = %s", got)
 	}
-	if got := r.next(cfg, "app-3", nil); got != "exa" {
+	// Once a provider has a key it wins over the sticky keyless one, then sticks.
+	cfg.Providers.Exa.APIKey = "e"
+	cfg.Providers.Brave.APIKey = "b"
+	if got := r.next(cfg, "app-1", nil); got != "exa" || r.next(cfg, "app-1", nil) != "exa" {
 		t.Fatalf("keyed preferred = %s", got)
 	}
-	// Paused sticky provider: another is picked.
-	r.pause("firecrawl", "", "10")
-	if got := r.next(cfg, "app-1", nil); got != "exa" {
-		t.Fatalf("paused sticky = %s", got)
+	if got := r.next(cfg, "app-3", nil); got != "exa" {
+		t.Fatalf("keyed preferred for a new app = %s", got)
 	}
 	// Fixed default mode never touches affinity.
 	cfg.Default = "parallel"
